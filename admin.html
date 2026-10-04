@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edi Barbershop – Frizer</title>
+  <meta name="theme-color" content="#14213d">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="top">
+    <a class="logo" href="index.html">Edi Barbershop</a>
+    <nav><a href="index.html">Stranica za klijente</a></nav>
+  </header>
+  <div class="pole" aria-hidden="true"></div>
+
+  <main>
+    <section id="prijava" class="narudzba" style="margin-top:50px">
+      <h2>Prijava za frizera</h2>
+      <form id="prijavaForma">
+        <label>PIN
+          <input type="password" id="pin" required>
+        </label>
+        <button class="btn" type="submit">Prijavi se</button>
+        <p id="greska" role="alert"></p>
+      </form>
+    </section>
+
+    <section id="panel" hidden style="padding-top:40px">
+      <h1>Zakazani termini</h1>
+      <div id="lista"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    const PIN = '1234'; // promijeni! (ovo je samo školska zaštita, nije prava sigurnost)
+    const lista = document.getElementById('lista');
+
+    document.getElementById('prijavaForma').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (document.getElementById('pin').value === PIN) {
+        document.getElementById('prijava').hidden = true;
+        document.getElementById('panel').hidden = false;
+        prikazi();
+      } else {
+        document.getElementById('greska').textContent = 'Pogrešan PIN.';
+      }
+    });
+
+    function prikazi() {
+      const svi = Store.all().sort((a, b) => (a.datum + a.vrijeme).localeCompare(b.datum + b.vrijeme));
+      lista.innerHTML = '';
+      if (!svi.length) {
+        lista.innerHTML = '<p class="prazno">Nema zakazanih termina.</p>';
+        return;
+      }
+      let dan = '';
+      svi.forEach(t => {
+        if (t.datum !== dan) {
+          dan = t.datum;
+          const h = document.createElement('h2');
+          h.className = 'dan';
+          h.textContent = new Date(t.datum).toLocaleDateString('hr-HR', { weekday: 'long', day: 'numeric', month: 'long' });
+          lista.append(h);
+        }
+        const kartica = document.createElement('div');
+        kartica.className = 'termin';
+
+        const tekst = document.createElement('div');
+        const naslov = document.createElement('strong');
+        naslov.textContent = `${t.vrijeme} – ${t.ime}`;
+        tekst.append(naslov, document.createElement('br'), `${t.usluga} · ${t.tel}`);
+        if (t.napomena) tekst.append(document.createElement('br'), 'Napomena: ' + t.napomena);
+
+        const gumb = document.createElement('button');
+        gumb.className = 'btn-otkazi';
+        gumb.textContent = 'Otkaži termin';
+        gumb.onclick = () => {
+          if (confirm(`Otkazati termin: ${t.ime}, ${t.vrijeme}?`)) { Store.remove(t.id); prikazi(); }
+        };
+
+        kartica.append(tekst, gumb);
+        lista.append(kartica);
+      });
+    }
+  </script>
+</body>
+</html>

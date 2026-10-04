@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edi Barbershop – Naruči termin</title>
+  <meta name="theme-color" content="#14213d">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="top">
+    <a class="logo" href="#">Edi Barbershop</a>
+    <nav>
+      <a href="#usluge">Usluge</a>
+      <a href="#narudzba">Naruči termin</a>
+      <a href="#kontakt">Kontakt</a>
+    </nav>
+  </header>
+
+  <div class="pole" aria-hidden="true"></div>
+
+  <main>
+    <section class="hero">
+      <h1>Svježe ošišan.<br>Bez čekanja.</h1>
+      <p>Odaberi uslugu, dan i sat. Termin je tvoj čim ga potvrdimo.</p>
+      <a class="btn" href="#narudzba">Naruči termin</a>
+    </section>
+
+    <section id="usluge" class="usluge">
+      <h2>Usluge i cijene</h2>
+      <ul>
+        <li><span>Fade šišanje</span><span class="dots"></span><span>20 €</span></li>
+        <li><span>Uređivanje brade</span><span class="dots"></span><span>15 €</span></li>
+        <li><span>Šišanje i brada</span><span class="dots"></span><span>30 €</span></li>
+        <li><span>Pranje kose</span><span class="dots"></span><span>3 €</span></li>
+      </ul>
+    </section>
+
+    <section id="narudzba" class="narudzba">
+      <h2>Naruči termin</h2>
+
+      <form id="forma">
+        <label>Ime i prezime
+          <input type="text" name="ime" required autocomplete="name">
+        </label>
+
+        <label>Broj mobitela
+          <input type="tel" name="tel" required autocomplete="tel">
+        </label>
+
+        <label>Usluga
+          <select name="usluga" required>
+            <option value="">Odaberi uslugu</option>
+            <option>Fade šišanje (20 €)</option>
+            <option>Uređivanje brade (15 €)</option>
+            <option>Šišanje i brada (30 €)</option>
+            <option>Pranje kose (3 €)</option>
+          </select>
+        </label>
+
+        <div class="red">
+          <label>Datum
+            <input type="date" name="datum" required>
+          </label>
+          <label>Vrijeme
+            <select name="vrijeme" required></select>
+          </label>
+        </div>
+
+        <label>Napomena (neobavezno)
+          <textarea name="napomena" rows="3"></textarea>
+        </label>
+
+        <button class="btn" type="submit">Potvrdi narudžbu</button>
+        <p id="poruka" role="status"></p>
+      </form>
+    </section>
+  </main>
+
+  <footer id="kontakt">
+    <p>Edi Barbershop · Ulica primjera 1, Velika Gorica</p>
+    <p>Pon–Pet 09–19 h · Sub 09–14 h · Nedjeljom zatvoreno</p>
+    <p>Tel: 091 000 0000</p>
+    <p><a class="mali-link" href="admin.html">Za frizera</a></p>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    const forma = document.getElementById('forma');
+    const poruka = document.getElementById('poruka');
+    const SATI = ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00','18:00'];
+
+    forma.datum.min = new Date().toISOString().split('T')[0];
+
+    // Popuni sate; već zauzeti su onemogućeni
+    function osvjeziSate() {
+      forma.vrijeme.innerHTML = '<option value="">Odaberi sat</option>';
+      SATI.forEach(s => {
+        const zauzeto = Store.taken(forma.datum.value, s);
+        const o = new Option(zauzeto ? s + ' (zauzeto)' : s, s);
+        o.disabled = zauzeto;
+        forma.vrijeme.add(o);
+      });
+    }
+    forma.datum.addEventListener('change', osvjeziSate);
+    osvjeziSate();
+
+    forma.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (Store.taken(forma.datum.value, forma.vrijeme.value)) {
+        poruka.textContent = 'Taj termin je upravo zauzet, odaberi drugi.';
+        osvjeziSate();
+        return;
+      }
+      Store.add({
+        ime: forma.ime.value,
+        tel: forma.tel.value,
+        usluga: forma.usluga.value,
+        datum: forma.datum.value,
+        vrijeme: forma.vrijeme.value,
+        napomena: forma.napomena.value
+      });
+      poruka.textContent = `Hvala, ${forma.ime.value}! Termin: ${forma.datum.value} u ${forma.vrijeme.value}.`;
+      forma.reset();
+      osvjeziSate();
+    });
+  </script>
+</body>
+</html>
