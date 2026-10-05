@@ -90,44 +90,52 @@
     <p><a class="mali-link" href="admin.html">Za frizera</a></p>
   </footer>
 
-  <script src="app.js"></script>
-  <script>
+  <script type="module">
+    import { Store } from './app.js';
     const forma = document.getElementById('forma');
     const poruka = document.getElementById('poruka');
     const SATI = ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00','18:00'];
+    const msg = (t, ok = true) => { poruka.textContent = t; poruka.style.color = ok ? '' : '#c8312b'; };
 
-    forma.datum.min = new Date().toISOString().split('T')[0];
+    forma.datum.min = new Date().toLocaleDateString('sv-SE'); // lokalni datum
 
-    // Popuni sate; već zauzeti su onemogućeni
-    function osvjeziSate() {
-      forma.vrijeme.innerHTML = '<option value="">Odaberi sat</option>';
-      SATI.forEach(s => {
-        const zauzeto = Store.taken(forma.datum.value, s);
-        const o = new Option(zauzeto ? s + ' (zauzeto)' : s, s);
-        o.disabled = zauzeto;
-        forma.vrijeme.add(o);
-      });
+    async function osvjeziSate() {
+      const d = forma.datum.value;
+      forma.vrijeme.innerHTML = '<option value="">' + (d ? 'Odaberi sat' : 'Prvo odaberi datum') + '</option>';
+      if (!d) return;
+      const dan = new Date(d + 'T00:00').getDay();
+      if (dan === 0) { msg('Nedjeljom ne radimo, odaberi drugi dan.', false); return; }
+      msg('');
+      try {
+        const zauzeti = await Store.takenOn(d);
+        if (forma.datum.value !== d) return;
+        SATI.filter(s => dan !== 6 || s < '14:00').forEach(s => {
+          const z = zauzeti.has(s);
+          const o = new Option(z ? s + ' (zauzeto)' : s, s);
+          o.disabled = z;
+          forma.vrijeme.add(o);
+        });
+      } catch { msg('Ne mogu učitati termine, pokušaj ponovno.', false); }
     }
     forma.datum.addEventListener('change', osvjeziSate);
     osvjeziSate();
 
-    forma.addEventListener('submit', (e) => {
+    forma.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (Store.taken(forma.datum.value, forma.vrijeme.value)) {
-        poruka.textContent = 'Taj termin je upravo zauzet, odaberi drugi.';
-        osvjeziSate();
-        return;
+      const gumb = forma.querySelector('button');
+      gumb.disabled = true;
+      const t = {
+        ime: forma.ime.value.trim(), tel: forma.tel.value.trim(), usluga: forma.usluga.value,
+        datum: forma.datum.value, vrijeme: forma.vrijeme.value, napomena: forma.napomena.value.trim()
+      };
+      try {
+        await Store.add(t);
+        msg(`Hvala, ${t.ime}! Termin: ${t.datum} u ${t.vrijeme}.`);
+        forma.reset();
+      } catch {
+        msg('Taj termin je zauzet ili je došlo do greške, odaberi drugi.', false);
       }
-      Store.add({
-        ime: forma.ime.value,
-        tel: forma.tel.value,
-        usluga: forma.usluga.value,
-        datum: forma.datum.value,
-        vrijeme: forma.vrijeme.value,
-        napomena: forma.napomena.value
-      });
-      poruka.textContent = `Hvala, ${forma.ime.value}! Termin: ${forma.datum.value} u ${forma.vrijeme.value}.`;
-      forma.reset();
+      gumb.disabled = false;
       osvjeziSate();
     });
   </script>

@@ -14,7 +14,7 @@
 
   <header class="top">
     <a class="logo" href="index.html">Edi Barbershop</a>
-    <nav><a href="index.html">Stranica za klijente</a></nav>
+    <nav><a href="index.html">Stranica za klijente</a><a href="#" id="odjava" hidden>Odjava</a></nav>
   </header>
   <div class="pole" aria-hidden="true"></div>
 
@@ -22,8 +22,11 @@
     <section id="prijava" class="narudzba" style="margin-top:50px">
       <h2>Prijava za frizera</h2>
       <form id="prijavaForma">
-        <label>PIN
-          <input type="password" id="pin" required>
+        <label>Email
+          <input type="email" id="email" required autocomplete="username">
+        </label>
+        <label>Lozinka
+          <input type="password" id="lozinka" required autocomplete="current-password">
         </label>
         <button class="btn" type="submit">Prijavi se</button>
         <p id="greska" role="alert"></p>
@@ -36,54 +39,55 @@
     </section>
   </main>
 
-  <script src="app.js"></script>
-  <script>
-    const PIN = '1234'; // promijeni! (ovo je samo školska zaštita, nije prava sigurnost)
+  <script type="module">
+    import { Store, Auth } from './app.js';
     const lista = document.getElementById('lista');
+    const greska = document.getElementById('greska');
+    const odjava = document.getElementById('odjava');
 
-    document.getElementById('prijavaForma').addEventListener('submit', (e) => {
+    document.getElementById('prijavaForma').addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (document.getElementById('pin').value === PIN) {
-        document.getElementById('prijava').hidden = true;
-        document.getElementById('panel').hidden = false;
-        prikazi();
-      } else {
-        document.getElementById('greska').textContent = 'Pogrešan PIN.';
-      }
+      greska.textContent = '';
+      try { await Auth.login(document.getElementById('email').value, document.getElementById('lozinka').value); }
+      catch { greska.textContent = 'Pogrešan email ili lozinka.'; }
+    });
+    odjava.addEventListener('click', (e) => { e.preventDefault(); Auth.logout(); });
+
+    Auth.onChange(user => {
+      document.getElementById('prijava').hidden = !!user;
+      document.getElementById('panel').hidden = !user;
+      odjava.hidden = !user;
+      if (user) prikazi();
     });
 
-    function prikazi() {
-      const svi = Store.all().sort((a, b) => (a.datum + a.vrijeme).localeCompare(b.datum + b.vrijeme));
+    async function prikazi() {
       lista.innerHTML = '';
-      if (!svi.length) {
-        lista.innerHTML = '<p class="prazno">Nema zakazanih termina.</p>';
-        return;
-      }
+      let svi;
+      try { svi = (await Store.all()).sort((a, b) => (a.datum + a.vrijeme).localeCompare(b.datum + b.vrijeme)); }
+      catch { lista.innerHTML = '<p class="prazno">Nemaš dozvolu ili je došlo do greške.</p>'; return; }
+      if (!svi.length) { lista.innerHTML = '<p class="prazno">Nema zakazanih termina.</p>'; return; }
       let dan = '';
       svi.forEach(t => {
         if (t.datum !== dan) {
           dan = t.datum;
           const h = document.createElement('h2');
           h.className = 'dan';
-          h.textContent = new Date(t.datum).toLocaleDateString('hr-HR', { weekday: 'long', day: 'numeric', month: 'long' });
+          h.textContent = new Date(t.datum + 'T00:00').toLocaleDateString('hr-HR', { weekday: 'long', day: 'numeric', month: 'long' });
           lista.append(h);
         }
         const kartica = document.createElement('div');
         kartica.className = 'termin';
-
         const tekst = document.createElement('div');
         const naslov = document.createElement('strong');
         naslov.textContent = `${t.vrijeme} – ${t.ime}`;
         tekst.append(naslov, document.createElement('br'), `${t.usluga} · ${t.tel}`);
         if (t.napomena) tekst.append(document.createElement('br'), 'Napomena: ' + t.napomena);
-
         const gumb = document.createElement('button');
         gumb.className = 'btn-otkazi';
         gumb.textContent = 'Otkaži termin';
-        gumb.onclick = () => {
-          if (confirm(`Otkazati termin: ${t.ime}, ${t.vrijeme}?`)) { Store.remove(t.id); prikazi(); }
+        gumb.onclick = async () => {
+          if (confirm(`Otkazati termin: ${t.ime}, ${t.vrijeme}?`)) { await Store.remove(t.id); prikazi(); }
         };
-
         kartica.append(tekst, gumb);
         lista.append(kartica);
       });
