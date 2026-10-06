@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, doc, writeBatch, getDocs, query, where, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const app = initializeApp({
@@ -26,11 +26,18 @@ export const Store = {
     const id = `${t.datum}_${t.vrijeme}`;
     const b = writeBatch(db);
     b.set(doc(db, 'slots', id), { datum: t.datum, vrijeme: t.vrijeme });
-    b.set(doc(db, 'termini', id), { ...t, created: serverTimestamp() });
+    const podaci = { ...t, created: serverTimestamp() };
+    if (!auth.currentUser) throw new Error('Nisi prijavljen');
+    podaci.uid = auth.currentUser.uid; // termin je uvijek vezan uz račun
+    b.set(doc(db, 'termini', id), podaci);
     await b.commit(); // ako je termin već zauzet, cijela operacija ne uspije
   },
   async all() {
     const s = await getDocs(collection(db, 'termini'));
+    return s.docs.map(d => ({ id: d.id, ...d.data() }));
+  },
+  async mine(uid) {
+    const s = await getDocs(query(collection(db, 'termini'), where('uid', '==', uid)));
     return s.docs.map(d => ({ id: d.id, ...d.data() }));
   },
   async remove(id) {
@@ -43,6 +50,8 @@ export const Store = {
 
 export const Auth = {
   login: (email, lozinka) => signInWithEmailAndPassword(auth, email, lozinka),
+  register: (email, lozinka) => createUserWithEmailAndPassword(auth, email, lozinka),
+  reset: (email) => sendPasswordResetEmail(auth, email),
   logout: () => signOut(auth),
   onChange: cb => onAuthStateChanged(auth, cb)
 };

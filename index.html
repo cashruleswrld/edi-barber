@@ -20,6 +20,7 @@
       <a href="#usluge">Usluge</a>
       <a href="#narudzba">Naruči termin</a>
       <a href="#kontakt">Kontakt</a>
+      <a href="racun.html">Moji termini</a>
     </nav>
   </header>
 
@@ -45,7 +46,12 @@
     <section id="narudzba" class="narudzba">
       <h2>Naruči termin</h2>
 
-      <form id="forma">
+      <div id="trebaPrijava">
+        <p style="margin-bottom:18px">Za naručivanje termina prvo se prijavi ili napravi račun. Tako ćeš na jednom mjestu vidjeti i otkazati svoje termine.</p>
+        <a class="btn" href="racun.html">Prijava / novi račun</a>
+      </div>
+
+      <form id="forma" hidden>
         <label>Ime i prezime
           <input type="text" name="ime" required autocomplete="name">
         </label>
@@ -90,7 +96,7 @@
   </footer>
 
   <script type="module">
-    import { Store } from './app.js';
+    import { Store, Auth } from './app.js';
     const forma = document.getElementById('forma');
     const poruka = document.getElementById('poruka');
     const SATI = ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00','18:00'];
@@ -117,7 +123,11 @@
       } catch { msg('Ne mogu učitati termine, pokušaj ponovno.', false); }
     }
     forma.datum.addEventListener('change', osvjeziSate);
-    osvjeziSate();
+    Auth.onChange(user => {
+      forma.hidden = !user;
+      document.getElementById('trebaPrijava').hidden = !!user;
+      if (user) osvjeziSate();
+    });
 
     forma.addEventListener('submit', async (e) => {
       e.preventDefault();

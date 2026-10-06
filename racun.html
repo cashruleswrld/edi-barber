@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Moji termini</title>
+  <meta name="theme-color" content="#14213d">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="top">
+    <a class="logo" href="index.html">Edi Barbershop</a>
+    <nav><a href="index.html">Naruči termin</a></nav>
+  </header>
+  <div class="pole" aria-hidden="true"></div>
+
+  <main>
+    <section id="prijava" class="narudzba" style="margin-top:50px">
+      <h2>Moj račun</h2>
+      <form id="prijavaForma">
+        <label>Email
+          <input type="email" id="email" required autocomplete="username">
+        </label>
+        <label>Lozinka (min. 6 znakova)
+          <input type="password" id="lozinka" required autocomplete="current-password">
+        </label>
+        <button class="btn" type="submit">Prijavi se</button>
+        <button class="btn-otkazi" type="button" id="registriraj">Napravi novi račun</button>
+        <button class="btn-otkazi" type="button" id="zaboravljena" style="border-color:#9aa5b5;color:#5b6577">Zaboravljena lozinka</button>
+        <p id="greska" role="alert"></p>
+      </form>
+    </section>
+
+    <section id="panel" hidden style="padding-top:40px">
+      <h1>Moji termini</h1>
+      <p class="prazno" id="tko"></p>
+      <p style="margin:12px 0"><a class="btn" href="index.html#narudzba">Naruči novi termin</a></p>
+      <div id="lista"></div>
+      <p style="margin-top:24px"><button class="btn-otkazi" id="odjava">Odjava</button></p>
+    </section>
+  </main>
+
+  <script type="module">
+    import { Store, Auth } from './app.js';
+    const $ = id => document.getElementById(id);
+    const lista = $('lista'), greska = $('greska');
+    const poruka = e => ({
+      'auth/email-already-in-use': 'Račun s tim emailom već postoji, prijavi se.',
+      'auth/weak-password': 'Lozinka mora imati barem 6 znakova.',
+      'auth/invalid-email': 'Email nije ispravan.'
+    })[e.code] || 'Pogrešan email ili lozinka.';
+    const unos = () => [$('email').value.trim(), $('lozinka').value];
+
+    $('prijavaForma').addEventListener('submit', async (e) => {
+      e.preventDefault(); greska.textContent = '';
+      try { await Auth.login(...unos()); } catch (er) { greska.textContent = poruka(er); }
+    });
+    $('registriraj').addEventListener('click', async () => {
+      greska.textContent = '';
+      if (!$('prijavaForma').reportValidity()) return;
+      try { await Auth.register(...unos()); } catch (er) { greska.textContent = poruka(er); }
+    });
+    $('zaboravljena').addEventListener('click', async () => {
+      const [mail] = unos();
+      if (!mail) { greska.textContent = 'Upiši email pa klikni ponovno.'; return; }
+      try { await Auth.reset(mail); greska.style.color = '#1c7a43'; greska.textContent = 'Poslali smo link za novu lozinku na ' + mail; }
+      catch { greska.style.color = ''; greska.textContent = 'Ne mogu poslati email, provjeri adresu.'; }
+    });
+    $('odjava').addEventListener('click', () => Auth.logout());
+
+    Auth.onChange(user => {
+      $('prijava').hidden = !!user;
+      $('panel').hidden = !user;
+      if (user) { $('tko').textContent = 'Prijavljen kao ' + user.email; prikazi(user.uid); }
+    });
+
+    async function prikazi(uid) {
+      lista.innerHTML = '';
+      const danas = new Date().toLocaleDateString('sv-SE');
+      let svi;
+      try { svi = (await Store.mine(uid)).filter(t => t.datum >= danas).sort((a, b) => (a.datum + a.vrijeme).localeCompare(b.datum + b.vrijeme)); }
+      catch { lista.innerHTML = '<p class="prazno">Ne mogu učitati termine.</p>'; return; }
+      if (!svi.length) { lista.innerHTML = '<p class="prazno">Nemaš nadolazećih termina. Naruči prvi termin gumbom iznad.</p>'; return; }
+      svi.forEach(t => {
+        const kartica = document.createElement('div');
+        kartica.className = 'termin';
+        const tekst = document.createElement('div');
+        const naslov = document.createElement('strong');
+        naslov.textContent = new Date(t.datum + 'T00:00').toLocaleDateString('hr-HR', { weekday: 'long', day: 'numeric', month: 'long' }) + ' u ' + t.vrijeme;
+        tekst.append(naslov, document.createElement('br'), t.usluga);
+        const gumb = document.createElement('button');
+        gumb.className = 'btn-otkazi';
+        gumb.textContent = 'Otkaži';
+        gumb.onclick = async () => {
+          if (confirm('Otkazati termin ' + t.datum + ' u ' + t.vrijeme + '?')) { await Store.remove(t.id); prikazi(uid); }
+        };
+        kartica.append(tekst, gumb);
+        lista.append(kartica);
+      });
+    }
+  </script>
+</body>
+</html>
