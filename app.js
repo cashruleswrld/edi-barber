@@ -1,8 +1,8 @@
 // Zajednički kod: Firebase (baza + prijava) i registracija aplikacije (PWA)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, doc, writeBatch, getDocs, query, where, serverTimestamp }
+import { getFirestore, collection, doc, getDoc, setDoc, writeBatch, getDocs, query, where, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged }
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const app = initializeApp({
@@ -48,9 +48,26 @@ export const Store = {
   }
 };
 
+// Osobni podaci klijenta (ime, mobitel) – vidi i mijenja ih samo vlasnik računa
+export const Profil = {
+  async get(uid) {
+    const d = await getDoc(doc(db, 'korisnici', uid));
+    return d.exists() ? d.data() : null;
+  },
+  async set(user, ime, tel) {
+    await updateProfile(user, { displayName: ime });
+    await setDoc(doc(db, 'korisnici', user.uid), { ime, tel });
+  }
+};
+
 export const Auth = {
   login: (email, lozinka) => signInWithEmailAndPassword(auth, email, lozinka),
-  register: (email, lozinka) => createUserWithEmailAndPassword(auth, email, lozinka),
+  register: async (email, lozinka, ime, tel) => {
+    const c = await createUserWithEmailAndPassword(auth, email, lozinka);
+    await Profil.set(c.user, ime, tel);
+    return c;
+  },
+  user: () => auth.currentUser,
   reset: (email) => sendPasswordResetEmail(auth, email),
   logout: () => signOut(auth),
   onChange: cb => onAuthStateChanged(auth, cb)

@@ -22,6 +22,12 @@
     <section id="prijava" class="narudzba" style="margin-top:50px">
       <h2>Moj račun</h2>
       <form id="prijavaForma">
+        <label>Ime i prezime (kod novog računa)
+          <input type="text" id="ime" autocomplete="name">
+        </label>
+        <label>Broj mobitela (kod novog računa)
+          <input type="tel" id="tel" autocomplete="tel">
+        </label>
         <label>Email
           <input type="email" id="email" required autocomplete="username">
         </label>
@@ -40,12 +46,23 @@
       <p class="prazno" id="tko"></p>
       <p style="margin:12px 0"><a class="btn" href="index.html#narudzba">Naruči novi termin</a></p>
       <div id="lista"></div>
+      <h2 style="margin:40px 0 16px">Moji podaci</h2>
+      <form id="podaciForma" class="narudzba">
+        <label>Ime i prezime
+          <input type="text" id="podIme" required autocomplete="name">
+        </label>
+        <label>Broj mobitela
+          <input type="tel" id="podTel" required autocomplete="tel">
+        </label>
+        <button class="btn" type="submit">Spremi promjene</button>
+        <p id="podaciPoruka" role="status" style="color:#c8312b"></p>
+      </form>
       <p style="margin-top:24px"><button class="btn-otkazi" id="odjava">Odjava</button></p>
     </section>
   </main>
 
   <script type="module">
-    import { Store, Auth } from './app.js';
+    import { Store, Auth, Profil } from './app.js';
     const $ = id => document.getElementById(id);
     const lista = $('lista'), greska = $('greska');
     const poruka = e => ({
@@ -62,7 +79,15 @@
     $('registriraj').addEventListener('click', async () => {
       greska.textContent = '';
       if (!$('prijavaForma').reportValidity()) return;
-      try { await Auth.register(...unos()); } catch (er) { greska.textContent = poruka(er); }
+      const ime = $('ime').value.trim();
+      if (ime.split(/\s+/).length < 2) { greska.textContent = 'Upiši ime i prezime.'; return; }
+      const tel = $('tel').value.trim();
+      if (tel.length < 6) { greska.textContent = 'Upiši broj mobitela.'; return; }
+      try {
+        await Auth.register(...unos(), ime, tel);
+        $('tko').textContent = 'Prijavljen kao ' + ime;
+        $('podIme').value = ime; $('podTel').value = tel;
+      } catch (er) { greska.textContent = poruka(er); }
     });
     $('zaboravljena').addEventListener('click', async () => {
       const [mail] = unos();
@@ -70,12 +95,30 @@
       try { await Auth.reset(mail); greska.style.color = '#1c7a43'; greska.textContent = 'Poslali smo link za novu lozinku na ' + mail; }
       catch { greska.style.color = ''; greska.textContent = 'Ne mogu poslati email, provjeri adresu.'; }
     });
+    async function ucitajPodatke(user) {
+      let pr = null;
+      try { pr = await Profil.get(user.uid); } catch {}
+      $('podIme').value = (pr && pr.ime) || user.displayName || '';
+      $('podTel').value = (pr && pr.tel) || '';
+    }
+    $('podaciForma').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const por = $('podaciPoruka'); por.style.color = '#c8312b';
+      const ime = $('podIme').value.trim(), tel = $('podTel').value.trim();
+      if (ime.split(/\s+/).length < 2) { por.textContent = 'Upiši ime i prezime.'; return; }
+      if (tel.length < 6) { por.textContent = 'Upiši ispravan broj mobitela.'; return; }
+      try {
+        await Profil.set(Auth.user(), ime, tel);
+        $('tko').textContent = 'Prijavljen kao ' + ime;
+        por.style.color = '#1c7a43'; por.textContent = 'Podaci su spremljeni.';
+      } catch { por.textContent = 'Spremanje nije uspjelo, pokušaj ponovno.'; }
+    });
     $('odjava').addEventListener('click', () => Auth.logout());
 
-    Auth.onChange(user => {
+    Auth.onChange(async user => {
       $('prijava').hidden = !!user;
       $('panel').hidden = !user;
-      if (user) { $('tko').textContent = 'Prijavljen kao ' + user.email; prikazi(user.uid); }
+      if (user) { $('tko').textContent = 'Prijavljen kao ' + (user.displayName || user.email); prikazi(user.uid); ucitajPodatke(user); }
     });
 
     async function prikazi(uid) {

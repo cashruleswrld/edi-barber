@@ -51,7 +51,8 @@
         <a class="btn" href="racun.html">Prijava / novi račun</a>
       </div>
 
-      <form id="forma" hidden>
+      <form id="forma" hidden style="display:none">
+        <p id="kao" class="prazno"></p>
         <label>Ime i prezime
           <input type="text" name="ime" required autocomplete="name">
         </label>
@@ -90,16 +91,16 @@
   </main>
 
   <footer id="kontakt">
-    <p>Edi Barbershop · Ulica primjera 1, Velika Gorica</p>
-    <p>Pon–Pet 09–19 h · Sub 09–14 h · Nedjeljom zatvoreno</p>
-    <p>Tel: 091 000 0000</p>
+    <p>Edi Barbershop · Gajeva ul. 29A, Zagreb</p>
+    <p>Pon–Pet 10–20 h · Sub 10–18 h · Nedjeljom zatvoreno</p>
+    <p>Tel: 091 618 1422</p>
   </footer>
 
   <script type="module">
-    import { Store, Auth } from './app.js';
+    import { Store, Auth, Profil } from './app.js';
     const forma = document.getElementById('forma');
     const poruka = document.getElementById('poruka');
-    const SATI = ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00','18:00'];
+    const SATI = Array.from({ length: 20 }, (_, i) => (10 + Math.floor(i / 2)) + (i % 2 ? ':30' : ':00')); // 10:00 … 19:30
     const msg = (t, ok = true) => { poruka.textContent = t; poruka.style.color = ok ? '' : '#c8312b'; };
 
     forma.datum.min = new Date().toLocaleDateString('sv-SE'); // lokalni datum
@@ -114,7 +115,7 @@
       try {
         const zauzeti = await Store.takenOn(d);
         if (forma.datum.value !== d) return;
-        SATI.filter(s => dan !== 6 || s < '14:00').forEach(s => {
+        SATI.filter(s => dan !== 6 || s < '18:00').forEach(s => {
           const z = zauzeti.has(s);
           const o = new Option(z ? s + ' (zauzeto)' : s, s);
           o.disabled = z;
@@ -123,10 +124,26 @@
       } catch { msg('Ne mogu učitati termine, pokušaj ponovno.', false); }
     }
     forma.datum.addEventListener('change', osvjeziSate);
-    Auth.onChange(user => {
-      forma.hidden = !user;
+    let profil = null;
+    // Ime i mobitel se uzimaju iz računa; polja se vide samo ako ih račun nema spremljene
+    function podaci() {
+      ['ime', 'tel'].forEach(n => {
+        const ok = !!(profil && profil[n]);
+        forma[n].closest('label').style.display = ok ? 'none' : '';
+        forma[n].required = !ok;
+        if (ok) forma[n].value = profil[n];
+      });
+      document.getElementById('kao').textContent = (profil && profil.ime && profil.tel)
+        ? `Naručuješ kao ${profil.ime} (${profil.tel}). Podatke možeš promijeniti u „Moji termini“.` : '';
+    }
+    Auth.onChange(async user => {
+      forma.style.display = user ? '' : 'none';
       document.getElementById('trebaPrijava').hidden = !!user;
-      if (user) osvjeziSate();
+      if (!user) { profil = null; return; }
+      try { profil = await Profil.get(user.uid); } catch { profil = null; }
+      if (!profil && user.displayName) profil = { ime: user.displayName };
+      podaci();
+      osvjeziSate();
     });
 
     forma.addEventListener('submit', async (e) => {
@@ -141,6 +158,7 @@
         await Store.add(t);
         msg(`Hvala, ${t.ime}! Termin: ${t.datum} u ${t.vrijeme}.`);
         forma.reset();
+        podaci();
       } catch {
         msg('Taj termin je zauzet ili je došlo do greške, odaberi drugi.', false);
       }
