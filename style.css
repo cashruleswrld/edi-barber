@@ -138,3 +138,6 @@ input, select { height: 46px; }
 .prazno, #greska { color: var(--muted); }
 #greska { color: var(--red); font-weight: 500; }
 .mali-link { color: #9aa5b5; font-size: .85rem; }
+
+/* hidden mora uvijek vrijediti (inače ga form { display: grid } poništi) */
+[hidden] { display: none !important; }
