@@ -1,4 +1,4 @@
-const CACHE = 'edi-v2';
+const CACHE = 'edi-v3';
 const FILES = ['index.html', 'admin.html', 'style.css', 'app.js', 'manifest.json', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
