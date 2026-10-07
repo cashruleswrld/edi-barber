@@ -93,15 +93,18 @@
       </form>
       <p style="margin-top:24px"><button class="btn-otkazi" id="odjava" data-i18n="odjava">Odjava</button></p>
 
-      <h2 style="margin:40px 0 12px" data-i18n="obrisi_h">Obriši račun</h2>
-      <p class="prazno" data-i18n="obrisi_info">Brisanjem se trajno brišu tvoj račun, osobni podaci i svi tvoji termini. Ovo se ne može poništiti.</p>
-      <form id="brisiForma" class="narudzba" style="margin-top:12px">
-        <label><span data-i18n="lozinka_potvrda">Lozinka (za potvrdu)</span>
-          <input type="password" id="brisiLozinka" required autocomplete="current-password">
-        </label>
-        <button class="btn-otkazi" type="submit" data-i18n="obrisi_gumb">Trajno obriši račun</button>
-        <p class="greska" id="brisiPoruka" role="alert"></p>
-      </form>
+      <p style="margin-top:40px"><button class="btn-otkazi" type="button" id="bObrisi" data-i18n="obrisi_h">Obriši račun</button></p>
+      <div id="brisiBlok" hidden>
+        <p class="prazno" data-i18n="obrisi_info">Brisanjem se trajno brišu tvoj račun, osobni podaci i svi tvoji termini. Ovo se ne može poništiti.</p>
+        <form id="brisiForma" class="narudzba" style="margin-top:12px">
+          <label><span data-i18n="lozinka_potvrda">Lozinka (za potvrdu)</span>
+            <input type="password" id="brisiLozinka" required autocomplete="current-password">
+          </label>
+          <button class="btn-otkazi" type="submit" data-i18n="obrisi_gumb">Trajno obriši račun</button>
+          <button class="btn-otkazi sivo" type="button" id="bOdustani" data-i18n="odustani">Odustani</button>
+          <p class="greska" id="brisiPoruka" role="alert"></p>
+        </form>
+      </div>
     </section>
   </main>
 
@@ -155,6 +158,15 @@
         poruci(por, 'podaci_ok', {}, true);
       } catch { poruci(por, 'spremanje_greska'); }
     });
+    function brisiOtvori(otvori) {
+      $('brisiBlok').hidden = !otvori;
+      $('bObrisi').hidden = otvori;
+      $('brisiLozinka').value = '';
+      poruci($('brisiPoruka'), '');
+      if (otvori) $('brisiLozinka').focus();
+    }
+    $('bObrisi').addEventListener('click', () => brisiOtvori(true));
+    $('bOdustani').addEventListener('click', () => brisiOtvori(false));
     $('brisiForma').addEventListener('submit', async (e) => {
       e.preventDefault();
       const por = $('brisiPoruka'); poruci(por, '');
@@ -186,6 +198,7 @@
       sekcije.forEach(s => { $(s).hidden = true; });
       $('izborPoruka').textContent = '';
       $('panel').hidden = false;
+      brisiOtvori(false);
       opisi();
       prikazi(u.uid);
       ucitajPodatke(u);
