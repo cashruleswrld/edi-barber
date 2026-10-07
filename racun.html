@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Moji termini</title>
-  <meta name="theme-color" content="#14213d">
+  <meta name="theme-color" content="#201f20">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png">
   <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
 <body>
 
   <header class="top">
-    <a class="logo" href="index.html">Edi Barbershop</a>
+    <a class="logo" href="index.html"><img class="logo-img" src="icon-192.png" alt="">Edi Barbershop</a>
     <nav><a href="index.html">Naruči termin</a></nav>
   </header>
   <div class="pole" aria-hidden="true"></div>
@@ -36,7 +36,7 @@
         </label>
         <button class="btn" type="submit">Prijavi se</button>
         <button class="btn-otkazi" type="button" id="registriraj">Napravi novi račun</button>
-        <button class="btn-otkazi" type="button" id="zaboravljena" style="border-color:#9aa5b5;color:#5b6577">Zaboravljena lozinka</button>
+        <button class="btn-otkazi" type="button" id="zaboravljena" style="border-color:#6b6768;color:#aaa6a3">Zaboravljena lozinka</button>
         <p id="greska" role="alert"></p>
       </form>
     </section>
@@ -55,7 +55,7 @@
           <input type="tel" id="podTel" required autocomplete="tel">
         </label>
         <button class="btn" type="submit">Spremi promjene</button>
-        <p id="podaciPoruka" role="status" style="color:#c8312b"></p>
+        <p id="podaciPoruka" role="status" style="color:#ff7b73"></p>
       </form>
       <p style="margin-top:24px"><button class="btn-otkazi" id="odjava">Odjava</button></p>
 
@@ -66,7 +66,7 @@
           <input type="password" id="brisiLozinka" required autocomplete="current-password">
         </label>
         <button class="btn-otkazi" type="submit">Trajno obriši račun</button>
-        <p id="brisiPoruka" role="alert" style="color:#c8312b"></p>
+        <p id="brisiPoruka" role="alert" style="color:#ff7b73"></p>
       </form>
     </section>
   </main>
@@ -102,7 +102,7 @@
     $('zaboravljena').addEventListener('click', async () => {
       const [mail] = unos();
       if (!mail) { greska.textContent = 'Upiši email pa klikni ponovno.'; return; }
-      try { await Auth.reset(mail); greska.style.color = '#1c7a43'; greska.textContent = 'Poslali smo link za novu lozinku na ' + mail; }
+      try { await Auth.reset(mail); greska.style.color = '#6fd39a'; greska.textContent = 'Poslali smo link za novu lozinku na ' + mail; }
       catch { greska.style.color = ''; greska.textContent = 'Ne mogu poslati email, provjeri adresu.'; }
     });
     async function ucitajPodatke(user) {
@@ -113,7 +113,7 @@
     }
     $('podaciForma').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const por = $('podaciPoruka'); por.style.color = '#c8312b';
+      const por = $('podaciPoruka'); por.style.color = '#ff7b73';
       const ime = $('podIme').value.trim(), tel = provjeriTel($('podTel').value);
       if (ime.split(/\s+/).length < 2) { por.textContent = 'Upiši ime i prezime.'; return; }
       if (!tel) { por.textContent = 'Upiši pravi broj mobitela, npr. 091 234 5678.'; return; }
@@ -121,7 +121,7 @@
         await Profil.set(Auth.user(), ime, tel);
         $('podTel').value = tel;
         $('tko').textContent = 'Prijavljen kao ' + ime;
-        por.style.color = '#1c7a43'; por.textContent = 'Podaci su spremljeni.';
+        por.style.color = '#6fd39a'; por.textContent = 'Podaci su spremljeni.';
       } catch { por.textContent = 'Spremanje nije uspjelo, pokušaj ponovno.'; }
     });
     $('brisiForma').addEventListener('submit', async (e) => {
@@ -131,7 +131,7 @@
       try {
         await Auth.obrisiRacun($('brisiLozinka').value);
         $('brisiLozinka').value = '';
-        greska.style.color = '#1c7a43'; greska.textContent = 'Račun je obrisan.';
+        greska.style.color = '#6fd39a'; greska.textContent = 'Račun je obrisan.';
       } catch (er) {
         por.textContent = (er.code === 'auth/invalid-credential' || er.code === 'auth/wrong-password')
           ? 'Pogrešna lozinka.' : 'Brisanje nije uspjelo, pokušaj ponovno.';

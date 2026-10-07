@@ -1,9 +1,14 @@
 :root {
-  --bg: #e9eef1;
-  --ink: #14213d;
+  --bg: #2b2a2b;       /* pozadina stranice */
+  --header: #201f20;   /* zaglavlje i podnožje */
+  --panel: #363435;    /* kartice – boja pozadine ikone aplikacije */
+  --field: #2b2a2b;    /* polja za unos */
+  --ink: #f2f0ee;
+  --muted: #aaa6a3;
+  --line: #4d4a4b;
   --red: #c8312b;
-  --white: #ffffff;
-  --muted: #5b6577;
+  --blue: #2a52a8;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -20,6 +25,7 @@ h1, h2, .logo {
   font-weight: 700;
   line-height: 1.05;
 }
+h2 { text-transform: uppercase; letter-spacing: .04em; }
 
 /* Zaglavlje */
 .top {
@@ -28,12 +34,13 @@ h1, h2, .logo {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  padding: 18px 6vw;
-  background: var(--ink);
+  padding: 12px 6vw;
+  background: var(--header);
 }
-.logo { color: var(--white); font-size: 1.6rem; text-decoration: none; }
-nav { display: flex; gap: 22px; }
-nav a { color: var(--white); text-decoration: none; }
+.logo { display: inline-flex; align-items: center; gap: 12px; color: var(--ink); font-size: 1.6rem; text-decoration: none; letter-spacing: .04em; text-transform: uppercase; }
+.logo-img { width: 44px; height: 44px; border-radius: 8px; }
+nav { display: flex; gap: 22px; flex-wrap: wrap; }
+nav a { color: var(--ink); text-decoration: none; }
 nav a:hover { color: #ff8a84; }
 
 /* Frizerski stup (barber pole) */
@@ -42,9 +49,9 @@ nav a:hover { color: #ff8a84; }
   background: repeating-linear-gradient(
     -45deg,
     var(--red) 0 14px,
-    var(--white) 14px 28px,
-    #2a52a8 28px 42px,
-    var(--white) 42px 56px
+    #f2f0ee 14px 28px,
+    var(--blue) 28px 42px,
+    #f2f0ee 42px 56px
   );
 }
 
@@ -52,14 +59,14 @@ main { max-width: 760px; margin: 0 auto; padding: 0 6vw 60px; }
 
 /* Hero */
 .hero { padding: 70px 0 50px; }
-.hero h1 { font-size: clamp(2.8rem, 9vw, 5.2rem); margin-bottom: 18px; }
+.hero h1 { font-size: clamp(2.8rem, 9vw, 5.2rem); margin-bottom: 18px; text-transform: uppercase; letter-spacing: .02em; }
 .hero p { color: var(--muted); font-size: 1.15rem; max-width: 42ch; margin-bottom: 28px; }
 
 /* Gumb */
 .btn {
   display: inline-block;
   background: var(--red);
-  color: var(--white);
+  color: #fff;
   border: 0;
   padding: 14px 28px;
   font: 500 1rem "Barlow", sans-serif;
@@ -68,10 +75,11 @@ main { max-width: 760px; margin: 0 auto; padding: 0 6vw 60px; }
   border-radius: 4px;
 }
 .btn:hover { background: #a82722; }
+.btn:disabled { opacity: .6; cursor: default; }
 .btn:focus-visible,
 input:focus-visible, select:focus-visible, textarea:focus-visible,
-nav a:focus-visible {
-  outline: 3px solid #2a52a8;
+nav a:focus-visible, button:focus-visible {
+  outline: 3px solid #8fb0ff;
   outline-offset: 2px;
 }
 
@@ -80,64 +88,66 @@ h2 { font-size: 2rem; margin-bottom: 20px; }
 .usluge { padding: 30px 0 50px; }
 .usluge ul { list-style: none; }
 .usluge li { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; font-size: 1.15rem; }
-.usluge .dots { flex: 1; border-bottom: 2px dotted #9aa5b5; }
+.usluge .dots { flex: 1; border-bottom: 2px dotted #6b6768; }
 .usluge li span:last-child { font-weight: 500; }
 
-/* Forma */
+/* Kartice i forma */
 .narudzba {
-  background: var(--white);
+  background: var(--panel);
   padding: 32px;
-  border-radius: 6px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
   border-top: 6px solid var(--red);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
 }
 form { display: grid; gap: 18px; }
 label { display: grid; gap: 6px; font-weight: 500; }
 input, select, textarea {
   font: inherit;
   padding: 11px 12px;
-  border: 1.5px solid #b8c1cf;
+  border: 1.5px solid #5a5758;
   border-radius: 4px;
-  background: var(--white);
+  background: var(--field);
   color: var(--ink);
 }
+input::placeholder { color: var(--muted); }
+input, select { height: 46px; }
 .red { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-#poruka { color: #1c7a43; font-weight: 500; }
+#poruka { color: #6fd39a; font-weight: 500; }
 
 /* Podnožje */
 footer {
-  background: var(--ink);
-  color: var(--white);
+  background: var(--header);
+  color: var(--muted);
   text-align: center;
   padding: 32px 6vw;
   display: grid;
   gap: 4px;
 }
 
+/* Popis termina (frizer i klijent) */
+.dan { margin: 30px 0 12px; font-size: 1.5rem; text-transform: capitalize; letter-spacing: 0; }
+.termin {
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 12px;
+  background: var(--panel); padding: 16px 20px; margin-bottom: 12px;
+  border: 1px solid var(--line); border-left: 6px solid var(--red); border-radius: 4px;
+}
+.btn-otkazi {
+  background: transparent; color: #ff7b73;
+  border: 1.5px solid var(--red); border-radius: 4px;
+  padding: 8px 16px; font: inherit; cursor: pointer;
+}
+.btn-otkazi:hover { background: var(--red); color: #fff; }
+.prazno { color: var(--muted); }
+#greska { color: #ff7b73; font-weight: 500; }
+.mali-link { color: var(--muted); font-size: .85rem; }
+
 /* Mobitel */
 @media (max-width: 520px) {
   .red { grid-template-columns: 1fr; }
   .narudzba { padding: 22px; }
 }
-
-/* ---- Dodano: poravnanje polja + stranica za frizera ---- */
-input, select { height: 46px; }
-
-.dan { margin: 30px 0 12px; font-size: 1.5rem; text-transform: capitalize; }
-.termin {
-  display: flex; justify-content: space-between; align-items: center;
-  flex-wrap: wrap; gap: 12px;
-  background: var(--white); padding: 16px 20px; margin-bottom: 12px;
-  border-left: 6px solid var(--red); border-radius: 4px;
-}
-.btn-otkazi {
-  background: transparent; color: var(--red);
-  border: 1.5px solid var(--red); border-radius: 4px;
-  padding: 8px 16px; font: inherit; cursor: pointer;
-}
-.btn-otkazi:hover { background: var(--red); color: var(--white); }
-.prazno, #greska { color: var(--muted); }
-#greska { color: var(--red); font-weight: 500; }
-.mali-link { color: #9aa5b5; font-size: .85rem; }
 
 /* hidden mora uvijek vrijediti (inače ga form { display: grid } poništi) */
 [hidden] { display: none !important; }

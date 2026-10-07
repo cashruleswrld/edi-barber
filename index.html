@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Edi Barbershop – Naruči termin</title>
-  <meta name="theme-color" content="#14213d">
+  <meta name="theme-color" content="#201f20">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,7 +15,7 @@
 <body>
 
   <header class="top">
-    <a class="logo" href="#">Edi Barbershop</a>
+    <a class="logo" href="#"><img class="logo-img" src="icon-192.png" alt="">Edi Barbershop</a>
     <nav>
       <a href="#usluge">Usluge</a>
       <a href="#narudzba">Naruči termin</a>
@@ -101,7 +101,7 @@
     const forma = document.getElementById('forma');
     const poruka = document.getElementById('poruka');
     const SATI = Array.from({ length: 20 }, (_, i) => (10 + Math.floor(i / 2)) + (i % 2 ? ':30' : ':00')); // 10:00 … 19:30
-    const msg = (t, ok = true) => { poruka.textContent = t; poruka.style.color = ok ? '' : '#c8312b'; };
+    const msg = (t, ok = true) => { poruka.textContent = t; poruka.style.color = ok ? '' : '#ff7b73'; };
 
     forma.datum.min = new Date().toLocaleDateString('sv-SE'); // lokalni datum
 
