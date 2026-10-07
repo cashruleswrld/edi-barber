@@ -58,11 +58,21 @@
         <p id="podaciPoruka" role="status" style="color:#c8312b"></p>
       </form>
       <p style="margin-top:24px"><button class="btn-otkazi" id="odjava">Odjava</button></p>
+
+      <h2 style="margin:40px 0 12px">Obriši račun</h2>
+      <p class="prazno">Brisanjem se trajno brišu tvoj račun, osobni podaci i svi tvoji termini. Ovo se ne može poništiti.</p>
+      <form id="brisiForma" class="narudzba" style="margin-top:12px">
+        <label>Lozinka (za potvrdu)
+          <input type="password" id="brisiLozinka" required autocomplete="current-password">
+        </label>
+        <button class="btn-otkazi" type="submit">Trajno obriši račun</button>
+        <p id="brisiPoruka" role="alert" style="color:#c8312b"></p>
+      </form>
     </section>
   </main>
 
   <script type="module">
-    import { Store, Auth, Profil } from './app.js';
+    import { Store, Auth, Profil, provjeriTel } from './app.js';
     const $ = id => document.getElementById(id);
     const lista = $('lista'), greska = $('greska');
     const poruka = e => ({
@@ -73,16 +83,16 @@
     const unos = () => [$('email').value.trim(), $('lozinka').value];
 
     $('prijavaForma').addEventListener('submit', async (e) => {
-      e.preventDefault(); greska.textContent = '';
+      e.preventDefault(); greska.textContent = ''; greska.style.color = '';
       try { await Auth.login(...unos()); } catch (er) { greska.textContent = poruka(er); }
     });
     $('registriraj').addEventListener('click', async () => {
-      greska.textContent = '';
+      greska.textContent = ''; greska.style.color = '';
       if (!$('prijavaForma').reportValidity()) return;
       const ime = $('ime').value.trim();
       if (ime.split(/\s+/).length < 2) { greska.textContent = 'Upiši ime i prezime.'; return; }
-      const tel = $('tel').value.trim();
-      if (tel.length < 6) { greska.textContent = 'Upiši broj mobitela.'; return; }
+      const tel = provjeriTel($('tel').value);
+      if (!tel) { greska.textContent = 'Upiši pravi broj mobitela, npr. 091 234 5678.'; return; }
       try {
         await Auth.register(...unos(), ime, tel);
         $('tko').textContent = 'Prijavljen kao ' + ime;
@@ -104,14 +114,28 @@
     $('podaciForma').addEventListener('submit', async (e) => {
       e.preventDefault();
       const por = $('podaciPoruka'); por.style.color = '#c8312b';
-      const ime = $('podIme').value.trim(), tel = $('podTel').value.trim();
+      const ime = $('podIme').value.trim(), tel = provjeriTel($('podTel').value);
       if (ime.split(/\s+/).length < 2) { por.textContent = 'Upiši ime i prezime.'; return; }
-      if (tel.length < 6) { por.textContent = 'Upiši ispravan broj mobitela.'; return; }
+      if (!tel) { por.textContent = 'Upiši pravi broj mobitela, npr. 091 234 5678.'; return; }
       try {
         await Profil.set(Auth.user(), ime, tel);
+        $('podTel').value = tel;
         $('tko').textContent = 'Prijavljen kao ' + ime;
         por.style.color = '#1c7a43'; por.textContent = 'Podaci su spremljeni.';
       } catch { por.textContent = 'Spremanje nije uspjelo, pokušaj ponovno.'; }
+    });
+    $('brisiForma').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const por = $('brisiPoruka'); por.textContent = '';
+      if (!confirm('Sigurno želiš trajno obrisati račun i sve svoje termine?')) return;
+      try {
+        await Auth.obrisiRacun($('brisiLozinka').value);
+        $('brisiLozinka').value = '';
+        greska.style.color = '#1c7a43'; greska.textContent = 'Račun je obrisan.';
+      } catch (er) {
+        por.textContent = (er.code === 'auth/invalid-credential' || er.code === 'auth/wrong-password')
+          ? 'Pogrešna lozinka.' : 'Brisanje nije uspjelo, pokušaj ponovno.';
+      }
     });
     $('odjava').addEventListener('click', () => Auth.logout());
 

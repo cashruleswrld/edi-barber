@@ -1,8 +1,8 @@
 // Zajednički kod: Firebase (baza + prijava) i registracija aplikacije (PWA)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, doc, getDoc, setDoc, writeBatch, getDocs, query, where, serverTimestamp }
+import { getFirestore, collection, doc, getDoc, setDoc, deleteDoc, writeBatch, getDocs, query, where, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, signOut, onAuthStateChanged }
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, reauthenticateWithCredential, EmailAuthProvider, deleteUser, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const app = initializeApp({
@@ -48,6 +48,17 @@ export const Store = {
   }
 };
 
+// Provjera broja mobitela: hrvatski mobitel (091 234 5678, +385 91 234 5678) ili inozemni (+43 ...)
+// Vraća očišćen broj ili null ako nije pravi broj
+export function provjeriTel(v) {
+  let t = String(v || '').trim().replace(/[\s\-\/().]/g, '');
+  if (t.startsWith('00')) t = '+' + t.slice(2);
+  if (/^\+385\d+$/.test(t)) t = '0' + t.slice(4);
+  if (/^09[1-9]\d{6,7}$/.test(t)) return t;
+  if (/^\+[1-9]\d{7,14}$/.test(t)) return t;
+  return null;
+}
+
 // Osobni podaci klijenta (ime, mobitel) – vidi i mijenja ih samo vlasnik računa
 export const Profil = {
   async get(uid) {
@@ -68,6 +79,14 @@ export const Auth = {
     return c;
   },
   user: () => auth.currentUser,
+  // Briše termine, osobne podatke i sam račun (traži lozinku radi sigurnosti)
+  obrisiRacun: async (lozinka) => {
+    const u = auth.currentUser;
+    await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, lozinka));
+    for (const t of await Store.mine(u.uid)) await Store.remove(t.id);
+    await deleteDoc(doc(db, 'korisnici', u.uid));
+    await deleteUser(u);
+  },
   reset: (email) => sendPasswordResetEmail(auth, email),
   logout: () => signOut(auth),
   onChange: cb => onAuthStateChanged(auth, cb)

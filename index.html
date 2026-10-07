@@ -97,7 +97,7 @@
   </footer>
 
   <script type="module">
-    import { Store, Auth, Profil } from './app.js';
+    import { Store, Auth, Profil, provjeriTel } from './app.js';
     const forma = document.getElementById('forma');
     const poruka = document.getElementById('poruka');
     const SATI = Array.from({ length: 20 }, (_, i) => (10 + Math.floor(i / 2)) + (i % 2 ? ':30' : ':00')); // 10:00 … 19:30
@@ -128,7 +128,7 @@
     // Ime i mobitel se uzimaju iz računa; polja se vide samo ako ih račun nema spremljene
     function podaci() {
       ['ime', 'tel'].forEach(n => {
-        const ok = !!(profil && profil[n]);
+        const ok = !!(profil && profil[n]) && (n !== 'tel' || !!provjeriTel(profil.tel));
         forma[n].closest('label').style.display = ok ? 'none' : '';
         forma[n].required = !ok;
         if (ok) forma[n].value = profil[n];
@@ -148,10 +148,12 @@
 
     forma.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const tel = provjeriTel(forma.tel.value);
+      if (!tel) { msg('Upiši pravi broj mobitela, npr. 091 234 5678.', false); return; }
       const gumb = forma.querySelector('button');
       gumb.disabled = true;
       const t = {
-        ime: forma.ime.value.trim(), tel: forma.tel.value.trim(), usluga: forma.usluga.value,
+        ime: forma.ime.value.trim(), tel, usluga: forma.usluga.value,
         datum: forma.datum.value, vrijeme: forma.vrijeme.value, napomena: forma.napomena.value.trim()
       };
       try {
