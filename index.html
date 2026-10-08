@@ -2,8 +2,8 @@
 <html lang="hr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Edi Barbershop – Naruči termin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Edi Barbershop</title>
   <meta name="theme-color" content="#201f20">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png">
@@ -12,59 +12,172 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body data-title="title_index">
+<body class="app" data-title="title_app">
 
-  <header class="top">
-    <a class="logo" href="#"><img class="logo-img" src="icon-192.png" alt="">Edi Barbershop</a>
-    <div class="desno">
-      <nav>
-        <a href="#usluge" data-i18n="nav_usluge">Usluge</a>
-        <a href="#narudzba" data-i18n="nav_naruci">Naruči termin</a>
-        <a href="#kontakt" data-i18n="nav_kontakt">Kontakt</a>
-        <a href="racun.html" data-i18n="nav_moji">Moji termini</a>
-      </nav>
-      <div class="jezik" role="group" aria-label="Jezik / Language">
-        <button type="button" data-lang="hr">HR</button>
-        <button type="button" data-lang="en">EN</button>
+  <!-- Ikone -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+    <symbol id="i-insta" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37zM17.5 6.5h.01"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22"/></symbol>
+  </svg>
+
+  <div class="jezik" role="group" aria-label="Jezik / Language">
+    <button type="button" data-lang="hr">HR</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+
+  <!-- ===== POČETNA ===== -->
+  <section class="view" id="v-pocetna">
+    <div class="hero-app">
+      <img class="veliki-logo" src="logo.png" alt="Edi Barbershop">
+      <div class="gumbi" data-out>
+        <button class="btn" type="button" data-go="prijava" data-i18n="prijava">Prijava</button>
+        <button class="btn-otkazi" type="button" data-go="registracija" data-i18n="registracija">Registracija</button>
+      </div>
+      <div class="gumbi" data-in hidden>
+        <button class="btn" type="button" data-go="rezervacija" data-i18n="naruci">Naruči termin</button>
       </div>
     </div>
-  </header>
 
-  <main>
-    <section class="hero">
-      <h1 data-i18n="hero_h1">Svježe ošišan.<br>Bez čekanja.</h1>
-      <p data-i18n="hero_p">Odaberi uslugu, dan i sat. Termin je tvoj čim ga potvrdimo.</p>
-      <a class="btn" href="#narudzba" data-i18n="hero_btn">Naruči termin</a>
-    </section>
-
-    <section id="usluge" class="usluge">
-      <h2 data-i18n="usluge_h">Usluge i cijene</h2>
-      <ul>
-        <li><span data-i18n="u1">Fade šišanje</span><span class="dots"></span><span>20 €</span></li>
-        <li><span data-i18n="u2">Uređivanje brade</span><span class="dots"></span><span>15 €</span></li>
-        <li><span data-i18n="u3">Šišanje i brada</span><span class="dots"></span><span>30 €</span></li>
-        <li><span data-i18n="u4">Pranje kose</span><span class="dots"></span><span>3 €</span></li>
-      </ul>
-    </section>
-
-    <section id="narudzba" class="narudzba">
-      <h2 data-i18n="narudzba_h">Naruči termin</h2>
-
-      <div id="trebaPrijava">
-        <p style="margin-bottom:18px" data-i18n="treba_prijava">Za naručivanje termina prvo se prijavi ili napravi račun. Tako ćeš na jednom mjestu vidjeti i otkazati svoje termine.</p>
-        <a class="btn" href="racun.html" data-i18n="prijava_gumb">Prijava / novi račun</a>
+    <div class="info-blok">
+      <svg class="ik veliki"><use href="#i-phone"/></svg>
+      <a href="tel:+385916181422">091 618 1422</a>
+    </div>
+    <div class="info-blok" id="insta" hidden>
+      <svg class="ik veliki"><use href="#i-insta"/></svg>
+      <a id="instaLink" href="#" target="_blank" rel="noopener"></a>
+    </div>
+    <div class="info-blok">
+      <svg class="ik veliki"><use href="#i-pin"/></svg>
+      <h2 data-i18n="posjeti">Posjeti nas</h2>
+      <p>Gajeva ul. 29A, Zagreb</p>
+      <a href="https://www.google.com/maps/search/?api=1&query=Gajeva+ul.+29A+Zagreb" target="_blank" rel="noopener" data-i18n="otvori_kartu">Otvori u kartama</a>
+    </div>
+    <div class="info-blok">
+      <svg class="ik veliki"><use href="#i-clock"/></svg>
+      <h2 data-i18n="radno_h">Radno vrijeme</h2>
+      <div class="sati">
+        <span data-i18n="r_pon">Ponedjeljak – Petak</span><strong>10:00 – 20:00</strong>
+        <span data-i18n="r_sub">Subota</span><strong>10:00 – 18:00</strong>
+        <span data-i18n="r_ned">Nedjelja</span><strong data-i18n="r_zatvoreno">Zatvoreno</strong>
       </div>
+    </div>
+  </section>
 
-      <form id="forma" style="display:none">
+  <!-- ===== USLUGE ===== -->
+  <section class="view" id="v-usluge" hidden>
+    <h2 data-i18n="usluge_h">Usluge i cijene</h2>
+    <ul class="cjenik">
+      <li><span data-i18n="u1">Fade šišanje</span><span class="dots"></span><span>20 €</span></li>
+      <li><span data-i18n="u2">Uređivanje brade</span><span class="dots"></span><span>15 €</span></li>
+      <li><span data-i18n="u3">Šišanje i brada</span><span class="dots"></span><span>30 €</span></li>
+      <li><span data-i18n="u4">Pranje kose</span><span class="dots"></span><span>3 €</span></li>
+    </ul>
+    <p style="margin-top:28px"><button class="btn" type="button" data-go="rezervacija" data-i18n="naruci">Naruči termin</button></p>
+  </section>
+
+  <!-- ===== TERMINI ===== -->
+  <section class="view" id="v-termini" hidden>
+    <h2 data-i18n="termini_h">Moji termini</h2>
+    <div id="terminiPrijava" hidden>
+      <p class="prazno" data-i18n="termini_prijava">Prijavi se da vidiš svoje termine.</p>
+      <p style="margin-top:16px"><button class="btn" type="button" data-go="prijava" data-i18n="prijava">Prijava</button></p>
+    </div>
+    <div id="terminiBlok" hidden>
+      <div class="tabovi">
+        <button type="button" data-tab="buduci" class="aktivno" data-i18n="tab_buduci">Budući</button>
+        <button type="button" data-tab="prosli" data-i18n="tab_prosli">Prošli</button>
+      </div>
+      <div id="lista"></div>
+      <p style="margin-top:20px"><button class="btn" type="button" data-go="rezervacija" data-i18n="naruci">Naruči termin</button></p>
+    </div>
+  </section>
+
+  <!-- ===== POSTAVKE ===== -->
+  <section class="view" id="v-postavke" hidden>
+    <h2 data-i18n="postavke_h">Postavke</h2>
+    <div class="postavke-lista">
+      <button class="postavka" type="button" data-go="prijava" data-out><svg class="ik"><use href="#i-user"/></svg><span data-i18n="prijava">Prijava</span><svg class="ik chev"><use href="#i-next"/></svg></button>
+      <button class="postavka" type="button" data-go="registracija" data-out><svg class="ik"><use href="#i-lock"/></svg><span data-i18n="registracija">Registracija</span><svg class="ik chev"><use href="#i-next"/></svg></button>
+      <button class="postavka" type="button" data-go="profil" data-in hidden><svg class="ik"><use href="#i-user"/></svg><span data-i18n="p_profil">Korisnički profil</span><svg class="ik chev"><use href="#i-next"/></svg></button>
+      <button class="postavka" type="button" data-go="racun" data-in hidden><svg class="ik"><use href="#i-lock"/></svg><span data-i18n="p_racun">Moj račun</span><svg class="ik chev"><use href="#i-next"/></svg></button>
+      <button class="postavka" type="button" data-go="oaplikaciji"><svg class="ik"><use href="#i-info"/></svg><span data-i18n="p_oapp">O aplikaciji</span><svg class="ik chev"><use href="#i-next"/></svg></button>
+      <button class="postavka" type="button" id="bOdjava" data-in hidden><svg class="ik"><use href="#i-logout"/></svg><span data-i18n="p_odjava">Odjavi me</span><svg class="ik chev"><use href="#i-next"/></svg></button>
+      <button class="postavka opasno" type="button" data-go="obrisi" data-in hidden><svg class="ik"><use href="#i-trash"/></svg><span data-i18n="p_obrisi">Obriši račun</span><svg class="ik chev"><use href="#i-next"/></svg></button>
+    </div>
+  </section>
+
+  <!-- ===== Podstranice ===== -->
+  <section class="view" id="v-prijava" hidden>
+    <button class="nazad" type="button" data-go="pocetna"><svg class="ik"><use href="#i-back"/></svg><span data-i18n="natrag">Natrag</span></button>
+    <div class="narudzba">
+      <h2 data-i18n="prijavi_se">Prijavi se</h2>
+      <form id="prijavaForma">
+        <label><span data-i18n="lbl_email">Email</span>
+          <input type="email" id="lEmail" required autocomplete="username">
+        </label>
+        <label><span data-i18n="lbl_lozinka">Lozinka</span>
+          <span class="lozinka"><input type="password" id="lLozinka" required autocomplete="current-password"><button type="button" class="oko" aria-label="Show / hide password"><svg class="ik o-vidi"><use href="#i-eye"/></svg><svg class="ik o-skrij"><use href="#i-eyeoff"/></svg></button></span>
+        </label>
+        <button class="btn" type="submit" data-i18n="prijavi_se">Prijavi se</button>
+        <button class="btn-otkazi sivo" type="button" id="zaboravljena" data-i18n="zaboravljena">Zaboravljena lozinka</button>
+        <p class="greska" id="lGreska" role="alert"></p>
+      </form>
+    </div>
+  </section>
+
+  <section class="view" id="v-registracija" hidden>
+    <button class="nazad" type="button" data-go="pocetna"><svg class="ik"><use href="#i-back"/></svg><span data-i18n="natrag">Natrag</span></button>
+    <div class="narudzba">
+      <h2 data-i18n="registracija_h">Registracija</h2>
+      <form id="registracijaForma">
+        <label><span data-i18n="lbl_ime">Ime</span>
+          <input type="text" id="rIme" required autocomplete="given-name">
+        </label>
+        <label><span data-i18n="lbl_tel">Broj mobitela</span>
+          <input type="tel" id="rTel" required autocomplete="tel">
+        </label>
+        <label><span data-i18n="lbl_email">Email</span>
+          <input type="email" id="rEmail" required autocomplete="username">
+        </label>
+        <label><span data-i18n="lbl_lozinka6">Lozinka (min. 6 znakova)</span>
+          <span class="lozinka"><input type="password" id="rLozinka" required minlength="6" autocomplete="new-password"><button type="button" class="oko" aria-label="Show / hide password"><svg class="ik o-vidi"><use href="#i-eye"/></svg><svg class="ik o-skrij"><use href="#i-eyeoff"/></svg></button></span>
+        </label>
+        <label><span data-i18n="lbl_lozinka2">Ponovi lozinku</span>
+          <span class="lozinka"><input type="password" id="rLozinka2" required minlength="6" autocomplete="new-password"><button type="button" class="oko" aria-label="Show / hide password"><svg class="ik o-vidi"><use href="#i-eye"/></svg><svg class="ik o-skrij"><use href="#i-eyeoff"/></svg></button></span>
+        </label>
+        <button class="btn" type="submit" data-i18n="napravi_racun">Napravi račun</button>
+        <p class="greska" id="rGreska" role="alert"></p>
+      </form>
+    </div>
+  </section>
+
+  <section class="view" id="v-rezervacija" hidden>
+    <button class="nazad" type="button" data-go="pocetna"><svg class="ik"><use href="#i-back"/></svg><span data-i18n="natrag">Natrag</span></button>
+    <div class="narudzba">
+      <h2 data-i18n="narudzba_h">Naruči termin</h2>
+      <form id="forma">
         <p id="kao" class="prazno"></p>
         <label><span data-i18n="lbl_ime">Ime</span>
           <input type="text" name="ime" required autocomplete="given-name">
         </label>
-
         <label><span data-i18n="lbl_tel">Broj mobitela</span>
           <input type="tel" name="tel" required autocomplete="tel">
         </label>
-
         <label><span data-i18n="lbl_usluga">Usluga</span>
           <select name="usluga" required>
             <option value="" data-i18n="opt_usluga">Odaberi uslugu</option>
@@ -74,7 +187,6 @@
             <option value="Pranje kose (3 €)" data-i18n="u4">Pranje kose</option>
           </select>
         </label>
-
         <div class="red">
           <label><span data-i18n="lbl_datum">Datum</span>
             <input type="date" name="datum" required>
@@ -83,32 +195,249 @@
             <select name="vrijeme" required></select>
           </label>
         </div>
-
         <label><span data-i18n="lbl_napomena">Napomena (neobavezno)</span>
           <textarea name="napomena" rows="3"></textarea>
         </label>
-
         <button class="btn" type="submit" data-i18n="potvrdi">Potvrdi narudžbu</button>
         <p id="poruka" role="status"></p>
       </form>
-    </section>
-  </main>
+    </div>
+  </section>
 
-  <footer id="kontakt">
-    <p>Edi Barbershop · Gajeva ul. 29A, Zagreb</p>
-    <p data-i18n="footer_radno">Pon–Pet 10–20 h · Sub 10–18 h · Nedjeljom zatvoreno</p>
-    <p>Tel: 091 618 1422</p>
-  </footer>
+  <section class="view" id="v-profil" hidden>
+    <button class="nazad" type="button" data-go="postavke"><svg class="ik"><use href="#i-back"/></svg><span data-i18n="natrag">Natrag</span></button>
+    <div class="narudzba">
+      <h2 data-i18n="p_profil">Korisnički profil</h2>
+      <form id="podaciForma">
+        <label><span data-i18n="lbl_ime">Ime</span>
+          <input type="text" id="pIme" required autocomplete="given-name">
+        </label>
+        <label><span data-i18n="lbl_tel">Broj mobitela</span>
+          <input type="tel" id="pTel" required autocomplete="tel">
+        </label>
+        <button class="btn" type="submit" data-i18n="spremi">Spremi promjene</button>
+        <p class="greska" id="podaciPoruka" role="status"></p>
+      </form>
+    </div>
+  </section>
+
+  <section class="view" id="v-racun" hidden>
+    <button class="nazad" type="button" data-go="postavke"><svg class="ik"><use href="#i-back"/></svg><span data-i18n="natrag">Natrag</span></button>
+    <div class="narudzba">
+      <h2 data-i18n="p_racun">Moj račun</h2>
+      <form id="racunForma">
+        <label><span data-i18n="lbl_email">Email</span>
+          <input type="email" id="racunEmail" readonly>
+        </label>
+        <p class="prazno" data-i18n="racun_info">Poslat ćemo ti email s linkom za postavljanje nove lozinke.</p>
+        <button class="btn" type="submit" data-i18n="promijeni_lozinku">Pošalji link za novu lozinku</button>
+        <p class="greska" id="racunPoruka" role="status"></p>
+      </form>
+    </div>
+  </section>
+
+  <section class="view" id="v-oaplikaciji" hidden>
+    <button class="nazad" type="button" data-go="postavke"><svg class="ik"><use href="#i-back"/></svg><span data-i18n="natrag">Natrag</span></button>
+    <div class="narudzba">
+      <h2 data-i18n="p_oapp">O aplikaciji</h2>
+      <p data-i18n="oapp_tekst">Edi Barbershop – online naručivanje termina.</p>
+    </div>
+  </section>
+
+  <section class="view" id="v-obrisi" hidden>
+    <button class="nazad" type="button" data-go="postavke"><svg class="ik"><use href="#i-back"/></svg><span data-i18n="natrag">Natrag</span></button>
+    <div class="narudzba">
+      <h2 data-i18n="p_obrisi">Obriši račun</h2>
+      <p class="prazno" data-i18n="obrisi_info">Brisanjem se trajno brišu tvoj račun, osobni podaci i svi tvoji termini.</p>
+      <form id="brisiForma" style="margin-top:18px">
+        <label><span data-i18n="lozinka_potvrda">Lozinka (za potvrdu)</span>
+          <span class="lozinka"><input type="password" id="brisiLozinka" required autocomplete="current-password"><button type="button" class="oko" aria-label="Show / hide password"><svg class="ik o-vidi"><use href="#i-eye"/></svg><svg class="ik o-skrij"><use href="#i-eyeoff"/></svg></button></span>
+        </label>
+        <button class="btn-otkazi" type="submit" data-i18n="obrisi_gumb">Trajno obriši račun</button>
+        <button class="btn-otkazi sivo" type="button" data-go="postavke" data-i18n="odustani">Odustani</button>
+        <p class="greska" id="brisiPoruka" role="alert"></p>
+      </form>
+    </div>
+  </section>
+
+  <div id="toast" role="status"></div>
+
+  <!-- Donja traka -->
+  <nav class="tabbar" aria-label="Navigacija">
+    <button class="tab" type="button" data-go="pocetna"><svg class="ik"><use href="#i-home"/></svg><span data-i18n="tab_pocetna">Početna</span></button>
+    <button class="tab" type="button" data-go="usluge"><svg class="ik"><use href="#i-list"/></svg><span data-i18n="tab_usluge">Usluge</span></button>
+    <button class="tab" type="button" data-go="termini"><svg class="ik"><use href="#i-cal"/></svg><span data-i18n="tab_termini">Termini</span></button>
+    <button class="tab" type="button" data-go="postavke"><svg class="ik"><use href="#i-gear"/></svg><span data-i18n="tab_postavke">Postavke</span></button>
+  </nav>
 
   <script type="module">
     import { Store, Auth, Profil, provjeriTel } from './app.js';
-    import { t } from './jezik.js';
-    const forma = document.getElementById('forma');
-    const poruka = document.getElementById('poruka');
+    import { t, jezik } from './jezik.js';
+    const $ = id => document.getElementById(id);
+    const INSTAGRAM = ''; // upiši korisničko ime bez @, npr. 'edibarbershop' (prazno = sakriveno)
+
+    // pogled -> koja kartica u donjoj traci svijetli
+    const POGLEDI = { pocetna: 'pocetna', usluge: 'usluge', termini: 'termini', postavke: 'postavke',
+      prijava: 'pocetna', registracija: 'pocetna', rezervacija: 'pocetna',
+      profil: 'postavke', racun: 'postavke', oaplikaciji: 'postavke', obrisi: 'postavke' };
+    const ZASTICENI = ['rezervacija', 'profil', 'racun', 'obrisi'];
+    let korisnik = null, profil = null, spreman = false, tab = 'buduci';
+
+    const poruci = (el, k, v, ok = false) => { el.textContent = k ? t(k, v) : ''; el.style.color = ok ? '#6fd39a' : ''; };
+    function toast(k, v) {
+      const e = $('toast'); e.textContent = t(k, v); e.classList.add('vidi');
+      clearTimeout(toast.h); toast.h = setTimeout(() => e.classList.remove('vidi'), 3200);
+    }
+    const greskaKod = e => ({ 'auth/email-already-in-use': 'e_postoji', 'auth/weak-password': 'e_slaba', 'auth/invalid-email': 'e_email' })[e.code] || 'e_login';
+
+    // ----- Usmjeravanje (#pocetna, #termini, ...) -----
+    function render() {
+      let v = location.hash.slice(1);
+      if (!POGLEDI[v]) v = 'pocetna';
+      if (ZASTICENI.includes(v)) {
+        if (!spreman) return;
+        if (!korisnik) { location.replace('#prijava'); return; }
+      }
+      document.querySelectorAll('.view').forEach(e => { e.hidden = e.id !== 'v-' + v; });
+      document.querySelectorAll('.tab').forEach(b => b.classList.toggle('aktivno', b.dataset.go === POGLEDI[v]));
+      window.scrollTo(0, 0);
+      if (v === 'termini') prikaziTermine();
+      if (v === 'rezervacija') osvjeziSate();
+      if (v === 'racun' && korisnik) $('racunEmail').value = korisnik.email || '';
+    }
+    window.addEventListener('hashchange', render);
+    document.addEventListener('click', e => {
+      const g = e.target.closest('[data-go]');
+      if (g) location.hash = '#' + g.dataset.go;
+      const o = e.target.closest('.oko');
+      if (o) {
+        const inp = o.parentElement.querySelector('input');
+        const vidi = inp.type === 'password';
+        inp.type = vidi ? 'text' : 'password';
+        o.classList.toggle('vidi', vidi);
+      }
+    });
+
+    function osvjeziUI() {
+      document.querySelectorAll('[data-in]').forEach(e => { e.hidden = !korisnik; });
+      document.querySelectorAll('[data-out]').forEach(e => { e.hidden = !!korisnik; });
+      $('insta').hidden = !INSTAGRAM;
+      if (INSTAGRAM) { $('instaLink').href = 'https://instagram.com/' + INSTAGRAM; $('instaLink').textContent = '@' + INSTAGRAM; }
+    }
+
+    // ----- Prijava / registracija -----
+    $('prijavaForma').addEventListener('submit', async (e) => {
+      e.preventDefault(); poruci($('lGreska'), '');
+      try { await Auth.login($('lEmail').value.trim(), $('lLozinka').value); $('lLozinka').value = ''; location.hash = '#pocetna'; }
+      catch (er) { poruci($('lGreska'), greskaKod(er)); }
+    });
+    $('registracijaForma').addEventListener('submit', async (e) => {
+      e.preventDefault(); poruci($('rGreska'), '');
+      const ime = $('rIme').value.trim(), tel = provjeriTel($('rTel').value);
+      if (ime.length < 2) { poruci($('rGreska'), 'e_ime'); return; }
+      if (!tel) { poruci($('rGreska'), 'm_tel'); return; }
+      if ($('rLozinka').value !== $('rLozinka2').value) { poruci($('rGreska'), 'e_razlicite'); return; }
+      try {
+        await Auth.register($('rEmail').value.trim(), $('rLozinka').value, ime, tel);
+        profil = { ime, tel };
+        ['rLozinka', 'rLozinka2'].forEach(i => { $(i).value = ''; });
+        osvjeziUI(); podaci(); ucitajProfilPolja();
+        location.hash = '#pocetna';
+      } catch (er) { poruci($('rGreska'), greskaKod(er)); }
+    });
+    $('zaboravljena').addEventListener('click', async () => {
+      const mail = $('lEmail').value.trim();
+      if (!mail) { poruci($('lGreska'), 'e_email_prvo'); return; }
+      try { await Auth.reset(mail); poruci($('lGreska'), 'reset_ok', { x: mail }, true); }
+      catch { poruci($('lGreska'), 'reset_err'); }
+    });
+    $('bOdjava').addEventListener('click', async () => { await Auth.logout(); location.hash = '#pocetna'; });
+
+    // ----- Profil, račun, brisanje -----
+    function ucitajProfilPolja() {
+      $('pIme').value = (profil && profil.ime) || (korisnik && korisnik.displayName) || '';
+      $('pTel').value = (profil && profil.tel) || '';
+    }
+    $('podaciForma').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const por = $('podaciPoruka');
+      const ime = $('pIme').value.trim(), tel = provjeriTel($('pTel').value);
+      if (ime.length < 2) { poruci(por, 'e_ime'); return; }
+      if (!tel) { poruci(por, 'm_tel'); return; }
+      try {
+        await Profil.set(Auth.user(), ime, tel);
+        profil = { ime, tel }; $('pTel').value = tel; podaci();
+        poruci(por, 'podaci_ok', {}, true);
+      } catch { poruci(por, 'spremanje_greska'); }
+    });
+    $('racunForma').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const por = $('racunPoruka');
+      try { await Auth.reset(korisnik.email); poruci(por, 'reset_ok', { x: korisnik.email }, true); }
+      catch { poruci(por, 'reset_err'); }
+    });
+    $('brisiForma').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const por = $('brisiPoruka'); poruci(por, '');
+      if (!confirm(t('potvrdi_brisanje'))) return;
+      try {
+        await Auth.obrisiRacun($('brisiLozinka').value);
+        $('brisiLozinka').value = '';
+        location.hash = '#pocetna';
+        toast('racun_obrisan');
+      } catch (er) {
+        poruci(por, (er.code === 'auth/invalid-credential' || er.code === 'auth/wrong-password') ? 'kriva_lozinka' : 'brisanje_greska');
+      }
+    });
+
+    // ----- Termini (budući / prošli) -----
+    document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => {
+      tab = b.dataset.tab;
+      document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('aktivno', x === b));
+      prikaziTermine();
+    }));
+    async function prikaziTermine() {
+      $('terminiPrijava').hidden = !!korisnik;
+      $('terminiBlok').hidden = !korisnik;
+      const lista = $('lista');
+      lista.innerHTML = '';
+      if (!korisnik) return;
+      const prazno = k => { const p = document.createElement('p'); p.className = 'prazno'; p.textContent = t(k); lista.append(p); };
+      let svi;
+      try { svi = await Store.mine(korisnik.uid); } catch { prazno('ne_mogu'); return; }
+      const sad = new Date(), granica = sad.toLocaleDateString('sv-SE') + 'T' + sad.toTimeString().slice(0, 5);
+      const buduci = tab === 'buduci';
+      const popis = svi.filter(x => (x.datum + 'T' + x.vrijeme >= granica) === buduci)
+        .sort((a, b) => (a.datum + a.vrijeme).localeCompare(b.datum + b.vrijeme) * (buduci ? 1 : -1));
+      if (!popis.length) { prazno(buduci ? 'nema_buducih' : 'nema_proslih'); return; }
+      const loc = jezik() === 'hr' ? 'hr-HR' : 'en-GB';
+      popis.forEach(x => {
+        const kartica = document.createElement('div');
+        kartica.className = 'termin';
+        const tekst = document.createElement('div');
+        const naslov = document.createElement('strong');
+        const dan = new Date(x.datum + 'T00:00').toLocaleDateString(loc, { weekday: 'long', day: 'numeric', month: 'long' });
+        naslov.textContent = t('u_vrijeme', { d: dan, v: x.vrijeme });
+        tekst.append(naslov, document.createElement('br'), x.usluga);
+        kartica.append(tekst);
+        if (buduci) {
+          const gumb = document.createElement('button');
+          gumb.className = 'btn-otkazi';
+          gumb.textContent = t('otkazi');
+          gumb.onclick = async () => {
+            if (confirm(t('potvrdi_otkaz', { d: x.datum, v: x.vrijeme }))) { await Store.remove(x.id); prikaziTermine(); }
+          };
+          kartica.append(gumb);
+        }
+        lista.append(kartica);
+      });
+    }
+
+    // ----- Naručivanje -----
+    const forma = $('forma'), poruka = $('poruka');
     const SATI = Array.from({ length: 20 }, (_, i) => (10 + Math.floor(i / 2)) + (i % 2 ? ':30' : ':00')); // 10:00 … 19:30
     const msg = (k, v, ok = true) => { poruka.textContent = k ? t(k, v) : ''; poruka.style.color = ok ? '' : '#ff7b73'; };
-
-    forma.datum.min = new Date().toLocaleDateString('sv-SE'); // lokalni datum
+    forma.datum.min = new Date().toLocaleDateString('sv-SE');
 
     // Prikazuju se samo slobodni termini (zauzeti i prošli se ne prikazuju)
     async function osvjeziSate() {
@@ -121,8 +450,7 @@
       try {
         const zauzeti = await Store.takenOn(d);
         if (forma.datum.value !== d) return;
-        const sad = new Date();
-        const danas = sad.toLocaleDateString('sv-SE'), sat = sad.toTimeString().slice(0, 5);
+        const sad = new Date(), danas = sad.toLocaleDateString('sv-SE'), sat = sad.toTimeString().slice(0, 5);
         const slobodni = SATI.filter(s => (dan !== 6 || s < '18:00') && !zauzeti.has(s) && !(d === danas && s <= sat));
         slobodni.forEach(s => forma.vrijeme.add(new Option(s, s)));
         if (!slobodni.length) msg('m_nema', {}, false);
@@ -130,7 +458,6 @@
     }
     forma.datum.addEventListener('change', osvjeziSate);
 
-    let profil = null;
     // Ime i mobitel se uzimaju iz računa; polja se vide samo ako ih račun nema spremljene
     function podaci() {
       ['ime', 'tel'].forEach(n => {
@@ -139,42 +466,41 @@
         forma[n].required = !ok;
         if (ok) forma[n].value = profil[n];
       });
-      document.getElementById('kao').textContent = (profil && profil.ime && profil.tel)
-        ? t('m_kao', { ime: profil.ime, tel: profil.tel }) : '';
+      $('kao').textContent = (profil && profil.ime && profil.tel) ? t('m_kao', { ime: profil.ime, tel: profil.tel }) : '';
     }
-    Auth.onChange(async user => {
-      forma.style.display = user ? '' : 'none';
-      document.getElementById('trebaPrijava').hidden = !!user;
-      if (!user) { profil = null; return; }
-      try { profil = await Profil.get(user.uid); } catch { profil = null; }
-      if (!profil && user.displayName) profil = { ime: user.displayName };
-      podaci();
-      osvjeziSate();
-    });
-    document.addEventListener('jezik', () => { podaci(); osvjeziSate(); });
-
     forma.addEventListener('submit', async (e) => {
       e.preventDefault();
       const tel = provjeriTel(forma.tel.value);
       if (!tel) { msg('m_tel', {}, false); return; }
-      const gumb = forma.querySelector('button');
+      const gumb = forma.querySelector('button[type=submit]');
       gumb.disabled = true;
-      const rez = {
-        ime: forma.ime.value.trim(), tel, usluga: forma.usluga.value,
-        datum: forma.datum.value, vrijeme: forma.vrijeme.value, napomena: forma.napomena.value.trim()
-      };
+      const rez = { ime: forma.ime.value.trim(), tel, usluga: forma.usluga.value,
+        datum: forma.datum.value, vrijeme: forma.vrijeme.value, napomena: forma.napomena.value.trim() };
       try {
         await Store.add(rez);
-        forma.reset();
-        podaci();
-        await osvjeziSate();
-        msg('m_hvala', { ime: rez.ime, d: rez.datum, v: rez.vrijeme });
+        forma.reset(); podaci(); msg('');
+        toast('m_hvala', { ime: rez.ime, d: rez.datum, v: rez.vrijeme });
+        location.hash = '#termini';
       } catch {
         await osvjeziSate();
         msg('m_zauzet', {}, false);
       }
       gumb.disabled = false;
     });
+
+    // ----- Stanje prijave -----
+    Auth.onChange(async u => {
+      korisnik = u; spreman = true;
+      if (u) {
+        try { profil = await Profil.get(u.uid); } catch { profil = null; }
+        if (!profil && u.displayName) profil = { ime: u.displayName };
+      } else profil = null;
+      osvjeziUI(); podaci(); ucitajProfilPolja();
+      render();
+    });
+    document.addEventListener('jezik', () => { podaci(); render(); });
+    osvjeziUI();
+    render();
   </script>
 </body>
 </html>

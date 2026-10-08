@@ -149,3 +149,66 @@ footer {
 
 /* hidden mora uvijek vrijediti (inače ga form { display: grid } poništi) */
 [hidden] { display: none !important; }
+
+/* Frizer: termini po danima (klik na dan otvara termine tog dana) */
+.dan-blok { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; margin-bottom: 12px; overflow: hidden; }
+.dan-blok summary {
+  display: flex; align-items: center; gap: 10px; padding: 16px 20px; cursor: pointer; list-style: none;
+  font: 700 1.3rem "Barlow Condensed", sans-serif; text-transform: capitalize;
+}
+.dan-blok summary::-webkit-details-marker { display: none; }
+.dan-blok summary::before { content: "▸"; color: var(--muted); }
+.dan-blok[open] summary::before { content: "▾"; }
+.dan-blok[open] summary { border-bottom: 1px solid var(--line); }
+.dan-ime { flex: 1; }
+.dan-blok .broj { background: var(--red); color: #fff; border-radius: 999px; padding: 2px 12px; font: 500 .9rem "Barlow", sans-serif; text-transform: none; }
+.dan-blok .termin { margin: 12px; background: var(--bg); }
+
+/* ===== Aplikacija (index.html): donja traka, pogledi, postavke ===== */
+.ik { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.ik.veliki { width: 40px; height: 40px; color: var(--muted); }
+.view { max-width: 560px; margin: 0 auto; padding: 64px 6vw calc(110px + env(safe-area-inset-bottom)); }
+.view h2 { margin-bottom: 16px; }
+.app .jezik { position: fixed; top: calc(12px + env(safe-area-inset-top)); right: 12px; z-index: 40; background: rgba(32, 31, 32, .85); padding: 4px; border-radius: 8px; }
+
+.hero-app { min-height: calc(100vh - 200px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; }
+.veliki-logo { width: min(80vw, 360px); height: auto; }
+.gumbi { display: grid; gap: 12px; width: min(100%, 320px); }
+.gumbi .btn, .gumbi .btn-otkazi { width: 100%; text-align: center; padding: 14px; font-size: 1.05rem; }
+.info-blok { text-align: center; padding: 40px 0; border-top: 1px solid var(--line); display: grid; gap: 10px; justify-items: center; }
+.info-blok h2 { margin: 0; }
+.info-blok a { color: var(--ink); font-weight: 500; font-size: 1.15rem; }
+.info-blok p { color: var(--muted); }
+.sati { display: grid; grid-template-columns: auto auto; gap: 6px 28px; color: var(--muted); text-align: left; }
+.sati strong { color: var(--ink); font-weight: 500; text-align: right; }
+
+.cjenik { list-style: none; }
+.cjenik li { display: flex; align-items: baseline; gap: 10px; padding: 10px 0; font-size: 1.15rem; }
+.cjenik .dots { flex: 1; border-bottom: 2px dotted #6b6768; }
+.cjenik li span:last-child { font-weight: 500; }
+
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; background: var(--header); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+.tab { flex: 1; display: grid; justify-items: center; gap: 2px; padding: 10px 4px 8px; background: none; border: 0; color: var(--muted); font: 500 .75rem "Barlow", sans-serif; cursor: pointer; }
+.tab.aktivno { color: var(--ink); box-shadow: inset 0 3px 0 var(--red); }
+
+.postavke-lista { border-top: 1px solid var(--line); }
+.postavka { display: flex; align-items: center; gap: 16px; width: 100%; padding: 18px 4px; background: none; border: 0; border-bottom: 1px solid var(--line); color: var(--ink); font: 500 1.05rem "Barlow", sans-serif; text-align: left; cursor: pointer; }
+.postavka .chev { margin-left: auto; color: var(--muted); }
+.postavka.opasno { color: #ff7b73; margin-top: 24px; border-top: 1px solid var(--line); }
+
+.nazad { display: inline-flex; align-items: center; gap: 4px; background: none; border: 0; color: var(--muted); font: 500 1rem "Barlow", sans-serif; cursor: pointer; margin-bottom: 14px; padding: 6px 0; }
+.tabovi { display: flex; border-bottom: 1px solid var(--line); margin: 18px 0; }
+.tabovi button { flex: 1; background: none; border: 0; border-bottom: 3px solid transparent; color: var(--muted); padding: 12px; font: 700 1.25rem "Barlow Condensed", sans-serif; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; }
+.tabovi button.aktivno { color: var(--ink); border-bottom-color: var(--red); }
+
+/* Polje za lozinku s ikonom oka */
+.lozinka { position: relative; display: block; }
+.lozinka input { width: 100%; padding-right: 48px; }
+.oko { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); background: none; border: 0; color: var(--muted); padding: 10px; cursor: pointer; display: grid; place-items: center; }
+.oko .o-skrij { display: none; }
+.oko.vidi .o-skrij { display: block; }
+.oko.vidi .o-vidi { display: none; }
+
+#toast { position: fixed; left: 50%; bottom: calc(88px + env(safe-area-inset-bottom)); transform: translate(-50%, 20px); background: #f2f0ee; color: #201f20; padding: 12px 18px; border-radius: 8px; opacity: 0; pointer-events: none; transition: .25s; z-index: 50; max-width: 90vw; text-align: center; font-weight: 500; }
+#toast.vidi { opacity: 1; transform: translate(-50%, 0); }
+.greska { min-height: 1.2em; }
