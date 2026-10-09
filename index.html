@@ -54,13 +54,13 @@
       </div>
     </div>
 
-    <div class="info-blok">
-      <svg class="ik veliki"><use href="#i-phone"/></svg>
-      <a href="tel:+385916181422">091 618 1422</a>
-    </div>
     <div class="info-blok" id="insta" hidden>
       <svg class="ik veliki"><use href="#i-insta"/></svg>
       <a id="instaLink" href="#" target="_blank" rel="noopener"></a>
+    </div>
+    <div class="info-blok">
+      <svg class="ik veliki"><use href="#i-phone"/></svg>
+      <a href="tel:+385916181422">091 618 1422</a>
     </div>
     <div class="info-blok">
       <svg class="ik veliki"><use href="#i-pin"/></svg>
@@ -281,7 +281,7 @@
     import { t, jezik } from './jezik.js';
     import { kalendar, ymd } from './kalendar.js';
     const $ = id => document.getElementById(id);
-    const INSTAGRAM = ''; // upiši korisničko ime bez @, npr. 'edibarbershop' (prazno = sakriveno)
+    const INSTAGRAM = '_barbershopedi'; // korisničko ime bez @ (prazno = sakriveno)
 
     // pogled -> koja kartica u donjoj traci svijetli
     const POGLEDI = { pocetna: 'pocetna', usluge: 'usluge', termini: 'termini', postavke: 'postavke',
@@ -336,7 +336,7 @@
       document.querySelectorAll('[data-in]').forEach(e => { e.hidden = !korisnik; });
       document.querySelectorAll('[data-out]').forEach(e => { e.hidden = !!korisnik; });
       $('insta').hidden = !INSTAGRAM;
-      if (INSTAGRAM) { $('instaLink').href = 'https://instagram.com/' + INSTAGRAM; $('instaLink').textContent = '@' + INSTAGRAM; }
+      if (INSTAGRAM) { $('instaLink').href = 'https://instagram.com/' + INSTAGRAM; $('instaLink').textContent = INSTAGRAM; }
     }
 
     // ----- Prijava / registracija -----
