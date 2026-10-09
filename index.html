@@ -351,7 +351,10 @@
       try { await Auth.reset(mail); poruci($('lGreska'), 'reset_ok', { x: mail }, true); }
       catch { poruci($('lGreska'), 'reset_err'); }
     });
-    $('bOdjava').addEventListener('click', async () => { await Auth.logout(); location.hash = '#pocetna'; });
+    $('bOdjava').addEventListener('click', async () => {
+      if (!confirm(t('potvrdi_odjavu'))) return;
+      await Auth.logout(); location.hash = '#pocetna';
+    });
 
     // ----- Profil, račun, brisanje -----
     function ucitajProfilPolja() {
@@ -436,7 +439,7 @@
     // ----- Naručivanje -----
     const forma = $('forma'), poruka = $('poruka');
     const SATI = Array.from({ length: 20 }, (_, i) => (10 + Math.floor(i / 2)) + (i % 2 ? ':30' : ':00')); // 10:00 … 19:30
-    const msg = (k, v, ok = true) => { poruka.textContent = k ? t(k, v) : ''; poruka.style.color = ok ? '' : '#ff7b73'; };
+    const msg = (k, v, ok = true) => { poruka.textContent = k ? t(k, v) : ''; poruka.style.color = ok ? '' : 'var(--greska)'; };
     forma.datum.min = new Date().toLocaleDateString('sv-SE');
 
     // Prikazuju se samo slobodni termini (zauzeti i prošli se ne prikazuju)

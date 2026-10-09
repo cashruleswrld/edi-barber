@@ -1,4 +1,4 @@
-const CACHE = 'edi-v12';
+const CACHE = 'edi-v13';
 const FILES = ['index.html', 'admin.html', 'style.css', 'app.js', 'jezik.js', 'logo.png', 'manifest.json', 'manifest-admin.json', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

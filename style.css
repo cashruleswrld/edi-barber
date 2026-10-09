@@ -6,7 +6,10 @@
   --ink: #f2f0ee;
   --muted: #aaa6a3;
   --line: #4d4a4b;
-  --red: #c8312b;
+  --naglasak: #f2f0ee; /* bijeli naglasak (gumbi, trake, značke) */
+  --naglasak-hover: #d6d2cf;
+  --na-naglasku: #201f20; /* tamnosiva slova na bijelom */
+  --greska: #f5b041;   /* jantarna boja za greške */
   --blue: #2a52a8;
   color-scheme: dark;
 }
@@ -51,7 +54,7 @@ nav { display: flex; gap: 22px; flex-wrap: wrap; }
 .btn-otkazi.sivo { color: var(--muted); border-color: #6b6768; }
 .btn-otkazi.sivo:hover { background: #6b6768; color: #fff; }
 nav a { color: var(--ink); text-decoration: none; }
-nav a:hover { color: #ff8a84; }
+nav a:hover { color: #fff; text-decoration: underline; }
 
 main { max-width: 760px; margin: 0 auto; padding: 0 6vw 60px; }
 
@@ -63,8 +66,8 @@ main { max-width: 760px; margin: 0 auto; padding: 0 6vw 60px; }
 /* Gumb */
 .btn {
   display: inline-block;
-  background: var(--red);
-  color: #fff;
+  background: var(--naglasak);
+  color: var(--na-naglasku);
   border: 0;
   padding: 14px 28px;
   font: 500 1rem "Barlow", sans-serif;
@@ -72,7 +75,7 @@ main { max-width: 760px; margin: 0 auto; padding: 0 6vw 60px; }
   cursor: pointer;
   border-radius: 4px;
 }
-.btn:hover { background: #a82722; }
+.btn:hover { background: var(--naglasak-hover); }
 .btn:disabled { opacity: .6; cursor: default; }
 .btn:focus-visible,
 input:focus-visible, select:focus-visible, textarea:focus-visible,
@@ -95,13 +98,15 @@ h2 { font-size: 2rem; margin-bottom: 20px; }
   padding: 32px;
   border-radius: 8px;
   border: 1px solid var(--line);
-  border-top: 6px solid var(--red);
+  border-top: 6px solid var(--naglasak);
   box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
 }
 form { display: grid; gap: 18px; }
-label { display: grid; gap: 6px; font-weight: 500; }
+label { display: grid; gap: 6px; font-weight: 500; min-width: 0; }
 input, select, textarea {
   font: inherit;
+  width: 100%;
+  min-width: 0;
   padding: 11px 12px;
   border: 1.5px solid #5a5758;
   border-radius: 4px;
@@ -110,7 +115,10 @@ input, select, textarea {
 }
 input::placeholder { color: var(--muted); }
 input, select { height: 46px; }
-.red { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+/* Safari (iPhone/iPad/Mac): polje datuma inače ima svoju širinu i izlazi iz kartice */
+input[type="date"] { -webkit-appearance: none; appearance: none; display: block; text-align: left; }
+input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+.red { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
 #poruka { color: #6fd39a; font-weight: 500; }
 
 /* Podnožje */
@@ -129,21 +137,21 @@ footer {
   display: flex; justify-content: space-between; align-items: center;
   flex-wrap: wrap; gap: 12px;
   background: var(--panel); padding: 16px 20px; margin-bottom: 12px;
-  border: 1px solid var(--line); border-left: 6px solid var(--red); border-radius: 4px;
+  border: 1px solid var(--line); border-left: 6px solid var(--naglasak); border-radius: 4px;
 }
 .btn-otkazi {
-  background: transparent; color: #ff7b73;
-  border: 1.5px solid var(--red); border-radius: 4px;
+  background: transparent; color: var(--ink);
+  border: 1.5px solid var(--naglasak); border-radius: 4px;
   padding: 8px 16px; font: inherit; cursor: pointer;
 }
-.btn-otkazi:hover { background: var(--red); color: #fff; }
+.btn-otkazi:hover { background: var(--naglasak); color: var(--na-naglasku); }
 .prazno { color: var(--muted); }
-#greska, .greska { color: #ff7b73; font-weight: 500; }
+#greska, .greska { color: var(--greska); font-weight: 500; }
 .mali-link { color: var(--muted); font-size: .85rem; }
 
 /* Mobitel */
 @media (max-width: 520px) {
-  .red { grid-template-columns: 1fr; }
+  .red { grid-template-columns: minmax(0, 1fr); }
   .narudzba { padding: 22px; }
 }
 
@@ -161,7 +169,7 @@ footer {
 .dan-blok[open] summary::before { content: "▾"; }
 .dan-blok[open] summary { border-bottom: 1px solid var(--line); }
 .dan-ime { flex: 1; }
-.dan-blok .broj { background: var(--red); color: #fff; border-radius: 999px; padding: 2px 12px; font: 500 .9rem "Barlow", sans-serif; text-transform: none; }
+.dan-blok .broj { background: var(--naglasak); color: var(--na-naglasku); border-radius: 999px; padding: 2px 12px; font: 500 .9rem "Barlow", sans-serif; text-transform: none; }
 .dan-blok .termin { margin: 12px; background: var(--bg); }
 
 /* ===== Aplikacija (index.html): donja traka, pogledi, postavke ===== */
@@ -189,17 +197,17 @@ footer {
 
 .tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; background: var(--header); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
 .tab { flex: 1; display: grid; justify-items: center; gap: 2px; padding: 10px 4px 8px; background: none; border: 0; color: var(--muted); font: 500 .75rem "Barlow", sans-serif; cursor: pointer; }
-.tab.aktivno { color: var(--ink); box-shadow: inset 0 3px 0 var(--red); }
+.tab.aktivno { color: var(--ink); box-shadow: inset 0 3px 0 var(--naglasak); }
 
 .postavke-lista { border-top: 1px solid var(--line); }
 .postavka { display: flex; align-items: center; gap: 16px; width: 100%; padding: 18px 4px; background: none; border: 0; border-bottom: 1px solid var(--line); color: var(--ink); font: 500 1.05rem "Barlow", sans-serif; text-align: left; cursor: pointer; }
 .postavka .chev { margin-left: auto; color: var(--muted); }
-.postavka.opasno { color: #ff7b73; margin-top: 24px; border-top: 1px solid var(--line); }
+.postavka.opasno { color: var(--greska); margin-top: 24px; border-top: 1px solid var(--line); }
 
 .nazad { display: inline-flex; align-items: center; gap: 4px; background: none; border: 0; color: var(--muted); font: 500 1rem "Barlow", sans-serif; cursor: pointer; margin-bottom: 14px; padding: 6px 0; }
 .tabovi { display: flex; border-bottom: 1px solid var(--line); margin: 18px 0; }
 .tabovi button { flex: 1; background: none; border: 0; border-bottom: 3px solid transparent; color: var(--muted); padding: 12px; font: 700 1.25rem "Barlow Condensed", sans-serif; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; }
-.tabovi button.aktivno { color: var(--ink); border-bottom-color: var(--red); }
+.tabovi button.aktivno { color: var(--ink); border-bottom-color: var(--naglasak); }
 
 /* Polje za lozinku s ikonom oka */
 .lozinka { position: relative; display: block; }
