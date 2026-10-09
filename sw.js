@@ -1,5 +1,5 @@
-const CACHE = 'edi-v13';
-const FILES = ['index.html', 'admin.html', 'style.css', 'app.js', 'jezik.js', 'logo.png', 'manifest.json', 'manifest-admin.json', 'icon-192.png', 'icon-512.png'];
+const CACHE = 'edi-v14';
+const FILES = ['index.html', 'admin.html', 'style.css', 'app.js', 'jezik.js', 'kalendar.js', 'logo.png', 'manifest.json', 'manifest-admin.json', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));

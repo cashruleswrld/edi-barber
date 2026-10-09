@@ -34,61 +34,82 @@
     </section>
 
     <section id="panel" hidden style="padding-top:40px">
-      <h1>Zakazani termini</h1>
+      <h1 style="margin-bottom:20px">Termini</h1>
+      <div id="kalendar"></div>
+      <div class="dan-naslov"><h2 id="danNaslov"></h2><span class="prazno" id="danBroj"></span></div>
       <div id="lista"></div>
     </section>
   </main>
 
   <script type="module">
     import { Store, Auth } from './app.js';
-    const lista = document.getElementById('lista');
-    const greska = document.getElementById('greska');
-    const odjava = document.getElementById('odjava');
+    import { kalendar, ymd } from './kalendar.js';
+    const $ = id => document.getElementById(id);
+    const lista = $('lista'), greska = $('greska'), odjava = $('odjava');
+    let svi = [], ucitano = false;
 
-    document.getElementById('prijavaForma').addEventListener('submit', async (e) => {
+    $('prijavaForma').addEventListener('submit', async (e) => {
       e.preventDefault();
       greska.textContent = '';
-      try { await Auth.login(document.getElementById('email').value, document.getElementById('lozinka').value); }
+      try { await Auth.login($('email').value, $('lozinka').value); }
       catch { greska.textContent = 'Pogrešan email ili lozinka.'; }
     });
     odjava.addEventListener('click', (e) => { e.preventDefault(); Auth.logout(); });
 
-    Auth.onChange(user => {
-      document.getElementById('prijava').hidden = !!user;
-      document.getElementById('panel').hidden = !user;
-      odjava.hidden = !user;
-      if (user) prikazi();
+    // Kalendar: značka na danu = broj termina tog dana; klik na dan prikaže njegove termine
+    const broj = d => svi.filter(t => t.datum === d).length;
+    const kal = kalendar($('kalendar'), {
+      loc: () => 'hr-HR',
+      oznaka: d => broj(d) || '',
+      odabir: prikaziDan
     });
 
-    async function prikazi() {
+    Auth.onChange(user => {
+      $('prijava').hidden = !!user;
+      $('panel').hidden = !user;
+      odjava.hidden = !user;
+      if (user) ucitaj(kal.odabrani() || ymd(new Date()));
+    });
+    // Kad se aplikacija ponovno otvori, povuci nove termine
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && Auth.user()) ucitaj(kal.odabrani());
+    });
+
+    async function ucitaj(dan) {
+      try { svi = await Store.all(); ucitano = true; }
+      catch { svi = []; ucitano = false; }
+      kal.postavi(dan || ymd(new Date()));
+      prikaziDan(kal.odabrani());
+    }
+
+    function prikaziDan(d) {
       lista.innerHTML = '';
-      let svi;
-      try { svi = (await Store.all()).sort((a, b) => (a.datum + a.vrijeme).localeCompare(b.datum + b.vrijeme)); }
-      catch { lista.innerHTML = '<p class="prazno">Nemaš dozvolu ili je došlo do greške.</p>'; return; }
-      if (!svi.length) { lista.innerHTML = '<p class="prazno">Nema zakazanih termina.</p>'; return; }
-      let dan = '';
-      svi.forEach(t => {
-        if (t.datum !== dan) {
-          dan = t.datum;
-          const h = document.createElement('h2');
-          h.className = 'dan';
-          h.textContent = new Date(t.datum + 'T00:00').toLocaleDateString('hr-HR', { weekday: 'long', day: 'numeric', month: 'long' });
-          lista.append(h);
-        }
+      $('danNaslov').textContent = new Date(d + 'T00:00').toLocaleDateString('hr-HR', { weekday: 'long', day: 'numeric', month: 'long' });
+      if (!ucitano) { $('danBroj').textContent = ''; lista.innerHTML = '<p class="prazno">Nemaš dozvolu ili je došlo do greške.</p>'; return; }
+      const dan = svi.filter(t => t.datum === d).sort((a, b) => a.vrijeme.localeCompare(b.vrijeme));
+      $('danBroj').textContent = dan.length ? `${dan.length} ${dan.length === 1 ? 'termin' : 'termina'}` : '';
+      if (!dan.length) { lista.innerHTML = '<p class="prazno">Nema termina za taj dan.</p>'; return; }
+      const sad = ymd(new Date()) + 'T' + new Date().toTimeString().slice(0, 5);
+      dan.forEach(t => {
         const kartica = document.createElement('div');
         kartica.className = 'termin';
         const tekst = document.createElement('div');
         const naslov = document.createElement('strong');
         naslov.textContent = `${t.vrijeme} – ${t.ime}`;
-        tekst.append(naslov, document.createElement('br'), `${t.usluga} · ${t.tel}`);
+        const tel = document.createElement('a');
+        tel.href = 'tel:' + t.tel; tel.textContent = t.tel;
+        tekst.append(naslov, document.createElement('br'), `${t.usluga} · `, tel);
         if (t.napomena) tekst.append(document.createElement('br'), 'Napomena: ' + t.napomena);
-        const gumb = document.createElement('button');
-        gumb.className = 'btn-otkazi';
-        gumb.textContent = 'Otkaži termin';
-        gumb.onclick = async () => {
-          if (confirm(`Otkazati termin: ${t.ime}, ${t.vrijeme}?`)) { await Store.remove(t.id); prikazi(); }
-        };
-        kartica.append(tekst, gumb);
+        kartica.append(tekst);
+        if (t.datum + 'T' + t.vrijeme >= sad) { // prošli termini se ne mogu otkazati
+          const gumb = document.createElement('button');
+          gumb.className = 'btn-otkazi';
+          gumb.textContent = 'Otkaži termin';
+          gumb.onclick = async () => {
+            if (confirm(`Otkazati termin: ${t.ime}, ${t.vrijeme}?`)) { await Store.remove(t.id); ucitaj(d); }
+          };
+          kartica.append(gumb);
+        }
         lista.append(kartica);
       });
     }

@@ -171,7 +171,6 @@
     <div class="narudzba">
       <h2 data-i18n="narudzba_h">Naruči termin</h2>
       <form id="forma">
-        <p id="kao" class="prazno"></p>
         <label><span data-i18n="lbl_ime">Ime</span>
           <input type="text" name="ime" required autocomplete="given-name">
         </label>
@@ -187,17 +186,18 @@
             <option value="Pranje kose (3 €)" data-i18n="u4">Pranje kose</option>
           </select>
         </label>
-        <div class="red">
-          <label><span data-i18n="lbl_datum">Datum</span>
-            <input type="date" name="datum" required>
-          </label>
-          <label><span data-i18n="lbl_vrijeme">Vrijeme</span>
-            <select name="vrijeme" required></select>
-          </label>
+        <div class="polje"><span data-i18n="lbl_datum">Datum</span>
+          <div id="kalendar"></div>
+          <input type="hidden" name="datum">
+        </div>
+        <div class="polje"><span data-i18n="lbl_vrijeme">Vrijeme</span>
+          <div class="sati-izbor" id="satiIzbor"></div>
+          <input type="hidden" name="vrijeme">
         </div>
         <label><span data-i18n="lbl_napomena">Napomena (neobavezno)</span>
           <textarea name="napomena" rows="3"></textarea>
         </label>
+        <p class="sazetak" id="sazetak" hidden></p>
         <button class="btn" type="submit" data-i18n="potvrdi">Potvrdi narudžbu</button>
         <p id="poruka" role="status"></p>
       </form>
@@ -253,7 +253,7 @@
         <label><span data-i18n="lozinka_potvrda">Lozinka (za potvrdu)</span>
           <span class="lozinka"><input type="password" id="brisiLozinka" required autocomplete="current-password"><button type="button" class="oko" aria-label="Show / hide password"><svg class="ik o-vidi"><use href="#i-eye"/></svg><svg class="ik o-skrij"><use href="#i-eyeoff"/></svg></button></span>
         </label>
-        <button class="btn-otkazi" type="submit" data-i18n="obrisi_gumb">Trajno obriši račun</button>
+        <button class="btn-otkazi opasno" type="submit" data-i18n="obrisi_gumb">Trajno obriši račun</button>
         <button class="btn-otkazi sivo" type="button" data-go="postavke" data-i18n="odustani">Odustani</button>
         <p class="greska" id="brisiPoruka" role="alert"></p>
       </form>
@@ -273,6 +273,7 @@
   <script type="module">
     import { Store, Auth, Profil, provjeriTel } from './app.js';
     import { t, jezik } from './jezik.js';
+    import { kalendar, ymd } from './kalendar.js';
     const $ = id => document.getElementById(id);
     const INSTAGRAM = ''; // upiši korisničko ime bez @, npr. 'edibarbershop' (prazno = sakriveno)
 
@@ -288,6 +289,13 @@
       const e = $('toast'); e.textContent = t(k, v); e.classList.add('vidi');
       clearTimeout(toast.h); toast.h = setTimeout(() => e.classList.remove('vidi'), 3200);
     }
+    const loc = () => jezik() === 'hr' ? 'hr-HR' : 'en-GB';
+    const lijepDan = d => new Date(d + 'T00:00').toLocaleDateString(loc(), { weekday: 'long', day: 'numeric', month: 'long' });
+
+    // Usluge: cijene i prijevod naziva (u bazi je spremljeno npr. "Fade šišanje (20 €)")
+    const CIJENE = { u1: '20 €', u2: '15 €', u3: '30 €', u4: '3 €' };
+    const USLUGE = { 'Fade šišanje': 'u1', 'Uređivanje brade': 'u2', 'Šišanje i brada': 'u3', 'Pranje kose': 'u4' };
+    const nazivUsluge = u => { const k = USLUGE[String(u || '').replace(/\s*\(.*\)$/, '')]; return k ? `${t(k)} · ${CIJENE[k]}` : u; };
     const greskaKod = e => ({ 'auth/email-already-in-use': 'e_postoji', 'auth/weak-password': 'e_slaba', 'auth/invalid-email': 'e_email' })[e.code] || 'e_login';
 
     // ----- Usmjeravanje (#pocetna, #termini, ...) -----
@@ -413,15 +421,13 @@
       const popis = svi.filter(x => (x.datum + 'T' + x.vrijeme >= granica) === buduci)
         .sort((a, b) => (a.datum + a.vrijeme).localeCompare(b.datum + b.vrijeme) * (buduci ? 1 : -1));
       if (!popis.length) { prazno(buduci ? 'nema_buducih' : 'nema_proslih'); return; }
-      const loc = jezik() === 'hr' ? 'hr-HR' : 'en-GB';
       popis.forEach(x => {
         const kartica = document.createElement('div');
         kartica.className = 'termin';
         const tekst = document.createElement('div');
         const naslov = document.createElement('strong');
-        const dan = new Date(x.datum + 'T00:00').toLocaleDateString(loc, { weekday: 'long', day: 'numeric', month: 'long' });
-        naslov.textContent = t('u_vrijeme', { d: dan, v: x.vrijeme });
-        tekst.append(naslov, document.createElement('br'), x.usluga);
+        naslov.textContent = t('u_vrijeme', { d: lijepDan(x.datum), v: x.vrijeme });
+        tekst.append(naslov, document.createElement('br'), nazivUsluge(x.usluga));
         kartica.append(tekst);
         if (buduci) {
           const gumb = document.createElement('button');
@@ -437,29 +443,64 @@
     }
 
     // ----- Naručivanje -----
-    const forma = $('forma'), poruka = $('poruka');
+    const forma = $('forma'), poruka = $('poruka'), satiEl = $('satiIzbor');
     const SATI = Array.from({ length: 20 }, (_, i) => (10 + Math.floor(i / 2)) + (i % 2 ? ':30' : ':00')); // 10:00 … 19:30
     const msg = (k, v, ok = true) => { poruka.textContent = k ? t(k, v) : ''; poruka.style.color = ok ? '' : 'var(--greska)'; };
-    forma.datum.min = new Date().toLocaleDateString('sv-SE');
 
+    // Kalendar: prošli dani, nedjelje i dani dalje od 60 dana se ne mogu odabrati
+    const danas = () => ymd(new Date());
+    const zadnji = () => { const d = new Date(); d.setDate(d.getDate() + 60); return ymd(d); };
+    const kal = kalendar($('kalendar'), {
+      loc, od: danas(), do: zadnji(),
+      onemoguci: d => d < danas() || d > zadnji() || new Date(d + 'T00:00').getDay() === 0,
+      odabir: d => { forma.datum.value = d; msg(''); osvjeziSate(); }
+    });
+
+    // Cijena pored svake usluge u izborniku
+    function cijeneUsluga() {
+      forma.usluga.querySelectorAll('option[data-i18n]').forEach(o => {
+        if (CIJENE[o.dataset.i18n]) o.textContent = `${t(o.dataset.i18n)} – ${CIJENE[o.dataset.i18n]}`;
+      });
+    }
+    // Kratki pregled odabranog termina iznad gumba
+    function sazetak() {
+      const s = $('sazetak'), f = forma;
+      s.hidden = !(f.usluga.value && f.datum.value && f.vrijeme.value);
+      if (!s.hidden) s.textContent = `${t('u_vrijeme', { d: lijepDan(f.datum.value), v: f.vrijeme.value })} · ${nazivUsluge(f.usluga.value)}`;
+    }
+    forma.usluga.addEventListener('change', sazetak);
+
+    function satiPoruka(k) {
+      satiEl.innerHTML = '';
+      const p = document.createElement('p'); p.className = 'prazno'; p.textContent = t(k);
+      satiEl.append(p);
+    }
     // Prikazuju se samo slobodni termini (zauzeti i prošli se ne prikazuju)
     async function osvjeziSate() {
       const d = forma.datum.value;
-      forma.vrijeme.innerHTML = '<option value="">' + t(d ? 'm_odaberi_sat' : 'm_prvo_datum') + '</option>';
-      if (!d) return;
-      const dan = new Date(d + 'T00:00').getDay();
-      if (dan === 0) { msg('m_nedjelja', {}, false); return; }
-      msg('');
+      forma.vrijeme.value = ''; sazetak();
+      if (!d) { satiPoruka('m_prvo_datum'); return; }
+      satiPoruka('ucitavam');
       try {
         const zauzeti = await Store.takenOn(d);
         if (forma.datum.value !== d) return;
-        const sad = new Date(), danas = sad.toLocaleDateString('sv-SE'), sat = sad.toTimeString().slice(0, 5);
-        const slobodni = SATI.filter(s => (dan !== 6 || s < '18:00') && !zauzeti.has(s) && !(d === danas && s <= sat));
-        slobodni.forEach(s => forma.vrijeme.add(new Option(s, s)));
-        if (!slobodni.length) msg('m_nema', {}, false);
-      } catch { msg('m_greska_ucit', {}, false); }
+        const dan = new Date(d + 'T00:00').getDay();
+        const sad = new Date(), sat = sad.toTimeString().slice(0, 5);
+        const slobodni = SATI.filter(s => (dan !== 6 || s < '18:00') && !zauzeti.has(s) && !(d === danas() && s <= sat));
+        if (!slobodni.length) { satiPoruka('m_nema'); return; }
+        satiEl.innerHTML = '';
+        slobodni.forEach(s => {
+          const b = document.createElement('button');
+          b.type = 'button'; b.className = 'sat'; b.textContent = s;
+          b.onclick = () => {
+            forma.vrijeme.value = s; msg('');
+            satiEl.querySelectorAll('.sat').forEach(x => x.classList.toggle('odabran', x === b));
+            sazetak();
+          };
+          satiEl.append(b);
+        });
+      } catch { satiPoruka('m_greska_ucit'); }
     }
-    forma.datum.addEventListener('change', osvjeziSate);
 
     // Ime i mobitel se uzimaju iz računa; polja se vide samo ako ih račun nema spremljene
     function podaci() {
@@ -469,20 +510,22 @@
         forma[n].required = !ok;
         if (ok) forma[n].value = profil[n];
       });
-      $('kao').textContent = (profil && profil.ime && profil.tel) ? t('m_kao', { ime: profil.ime, tel: profil.tel }) : '';
     }
     forma.addEventListener('submit', async (e) => {
       e.preventDefault();
       const tel = provjeriTel(forma.tel.value);
       if (!tel) { msg('m_tel', {}, false); return; }
+      if (!forma.datum.value) { msg('m_prvo_datum', {}, false); return; }
+      if (!forma.vrijeme.value) { msg('m_odaberi_sat', {}, false); return; }
       const gumb = forma.querySelector('button[type=submit]');
       gumb.disabled = true;
       const rez = { ime: forma.ime.value.trim(), tel, usluga: forma.usluga.value,
         datum: forma.datum.value, vrijeme: forma.vrijeme.value, napomena: forma.napomena.value.trim() };
       try {
         await Store.add(rez);
-        forma.reset(); podaci(); msg('');
-        toast('m_hvala', { ime: rez.ime, d: rez.datum, v: rez.vrijeme });
+        forma.reset(); forma.datum.value = ''; forma.vrijeme.value = ''; kal.postavi('');
+        podaci(); sazetak(); msg('');
+        toast('m_hvala', { ime: rez.ime, d: lijepDan(rez.datum), v: rez.vrijeme });
         location.hash = '#termini';
       } catch {
         await osvjeziSate();
@@ -501,7 +544,8 @@
       osvjeziUI(); podaci(); ucitajProfilPolja();
       render();
     });
-    document.addEventListener('jezik', () => { podaci(); render(); });
+    document.addEventListener('jezik', () => { podaci(); cijeneUsluga(); kal.crtaj(); render(); sazetak(); });
+    cijeneUsluga();
     osvjeziUI();
     render();
   </script>
