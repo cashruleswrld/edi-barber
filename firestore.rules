@@ -8,6 +8,12 @@ service cloud.firestore {
     function dobarTel(t) { return t is string && t.matches('^(09[1-9][0-9]{6,7}|[+][1-9][0-9]{7,14})$'); }
     function dobroIme(i) { return i is string && i.size() >= 2 && i.size() <= 50; }
     function put(kolekcija, id) { return /databases/$(database)/documents/$(kolekcija)/$(id); }
+    // Vrijeme termina (hrvatsko zimsko vrijeme, UTC+1; ljeti je pravilo 1 sat blaže)
+    function kada(d) {
+      return timestamp.date(int(d.datum.split('-')[0]), int(d.datum.split('-')[1]), int(d.datum.split('-')[2]))
+        + duration.value(int(d.vrijeme.split(':')[0]) * 60 + int(d.vrijeme.split(':')[1]) - 60, 'm');
+    }
+    function neplacen(d) { return d.get('nijeDosao', false) == true && d.get('podmireno', false) != true; }
 
     // Zauzeti sati (bez osobnih podataka) – nastaju samo zajedno s terminom
     match /slots/{id} {
@@ -29,7 +35,8 @@ service cloud.firestore {
       allow delete: if frizer() || (prijavljen() && id.matches('^' + request.auth.uid + '_.*'));
     }
 
-    // Termini: vidi ih frizer i vlasnik; frizer smije samo označiti "nije došao" / "platio"
+    // Termini: vidi ih frizer i vlasnik; frizer smije samo označiti "nije došao" / "platio".
+    // Kasno otkazan termin (manje od 8 sati prije) seli se u termini/{id}_k i plaća se kao propušteni.
     match /termini/{id} {
       allow read: if frizer() || (prijavljen() && resource.data.uid == request.auth.uid);
       allow create: if prijavljen()
@@ -45,12 +52,25 @@ service cloud.firestore {
         && request.resource.data.created == request.time
         && existsAfter(put('slots', id))
         && existsAfter(put('dnevno', request.auth.uid + '_' + request.resource.data.datum));
+      allow create: if prijavljen()
+        && id == request.resource.data.datum + '_' + request.resource.data.vrijeme + '_k'
+        && get(put('termini', request.resource.data.datum + '_' + request.resource.data.vrijeme)).data.uid == request.auth.uid
+        && !existsAfter(put('termini', request.resource.data.datum + '_' + request.resource.data.vrijeme))
+        && request.resource.data.diff(get(put('termini', request.resource.data.datum + '_' + request.resource.data.vrijeme)).data)
+             .affectedKeys().hasOnly(['otkazanKasno', 'nijeDosao', 'podmireno'])
+        && request.resource.data.otkazanKasno == true
+        && request.resource.data.nijeDosao == true
+        && request.resource.data.podmireno == false;
       allow update: if frizer()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nijeDosao', 'podmireno']);
-      // Klijent ne može obrisati propušteni termin koji još nije platio
+      // Klijent briše svoj termin: ne ako duguje za njega; manje od 8 sati prije samo kao kasni otkaz (_k);
+      // prošle termine tek 2 dana kasnije (da frizer stigne označiti "nije došao")
       allow delete: if frizer()
-        || (prijavljen() && resource.data.uid == request.auth.uid
-            && !(resource.data.get('nijeDosao', false) == true && resource.data.get('podmireno', false) != true));
+        || (prijavljen() && resource.data.uid == request.auth.uid && !neplacen(resource.data)
+            && (kada(resource.data) > request.time + duration.value(8, 'h')
+                || kada(resource.data) < request.time - duration.value(2, 'd')
+                || resource.data.get('otkazanKasno', false) == true
+                || existsAfter(put('termini', id + '_k'))));
     }
 
     // Osobni podaci klijenta – samo vlasnik

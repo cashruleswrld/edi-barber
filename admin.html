@@ -46,7 +46,7 @@
         <div><h2 id="pIme"></h2><a id="pTel"></a></div>
         <button class="kal-strelica" type="button" id="pZatvori" aria-label="Zatvori">×</button>
       </div>
-      <p class="prazno" id="pSazetak"></p>
+      <div class="cipovi" id="pSazetak"></div>
       <div id="pLista"></div>
     </dialog>
   </main>
@@ -113,60 +113,103 @@
       $('danBroj').textContent = termini.length ? `${termini.length} ${termini.length === 1 ? 'termin' : 'termina'}` : '';
       if (!termini.length) { lista.append(el('p', 'prazno', 'Nema termina za taj dan.')); return; }
       termini.forEach(t => lista.append(kartica(t, () => ucitajMjesec(d.slice(0, 7)))));
-      // Upozorenje ako klijent duguje propušteni termin (samo za današnje i buduće termine)
-      const dolaze = termini.filter(t => t.uid && t.datum + 'T' + t.vrijeme >= sad().slice(0, 10));
-      for (const uid of new Set(dolaze.map(t => t.uid))) {
-        let dug = [];
-        try { dug = await Store.dugovi(uid); } catch {}
-        if (!dug.length || kal.odabrani() !== d) continue;
-        const iznos = dug.reduce((z, x) => z + cijena(x.usluga), 0);
-        const tekst = `Duguje propušteni termin: ${dug.map(x => kratkiDan(x.datum)).join(', ')} (${iznos} €)`;
-        lista.querySelectorAll(`[data-uid="${uid}"] .info`).forEach(i => { if (!i.querySelector('.dug')) i.append(el('span', 'dug', tekst)); });
+      // Uz svakog klijenta: koliko puta nije došao / kasno otkazao i koliko duguje
+      for (const uid of new Set(termini.map(t => t.uid).filter(Boolean))) {
+        const p = await povijestKlijenta(uid);
+        if (!p || kal.odabrani() !== d) continue;
+        const s = statistika(p);
+        const dijelovi = [];
+        if (s.nije) dijelovi.push(`nije došao ${s.nije}×`);
+        if (s.kasno) dijelovi.push(`kasno otkazao ${s.kasno}×`);
+        if (s.dug) dijelovi.push(`duguje ${s.dug} €`);
+        if (!dijelovi.length) continue;
+        lista.querySelectorAll(`[data-uid="${uid}"] .info`).forEach(i => i.append(el('span', 'dug', dijelovi.join(' · '))));
       }
+    }
+
+    // Povijest klijenata (pamti se dok je aplikacija otvorena, da se ne čita stalno iz baze)
+    const povijesti = {};
+    async function povijestKlijenta(uid, svjeze = false) {
+      if (svjeze || !povijesti[uid]) {
+        try { povijesti[uid] = await Store.mine(uid); } catch { return null; }
+      }
+      return povijesti[uid];
+    }
+    const prosao = t => t.datum + 'T' + t.vrijeme < sad();
+    function statistika(svi) {
+      const nije = svi.filter(x => x.nijeDosao && !x.otkazanKasno).length;
+      const kasno = svi.filter(x => x.nijeDosao && x.otkazanKasno).length;
+      const dosao = svi.filter(x => prosao(x) && !x.nijeDosao && !x.otkazanKasno).length;
+      const buducih = svi.filter(x => !prosao(x) && !x.otkazanKasno).length;
+      const dug = svi.filter(x => x.nijeDosao && !x.podmireno).reduce((z, x) => z + cijena(x.usluga), 0);
+      return { ukupno: svi.length, nije, kasno, dosao, buducih, dug };
     }
 
     // Jedan termin: klik na tekst otvara povijest klijenta; gumbi ovise o tome je li termin prošao
     function kartica(t, nakon, uPovijesti = false) {
-      const k = el('div', 'termin');
+      const k = el('div', 'termin' + (t.nijeDosao ? ' propusten' : ''));
       k.dataset.uid = t.uid || '';
       const info = el('div', 'info');
       info.append(el('strong', null, uPovijesti ? `${kratkiDan(t.datum)} u ${t.vrijeme}` : `${t.vrijeme} – ${t.ime}`), el('br'));
       if (uPovijesti) info.append(t.usluga);
       else { const tel = el('a', null, t.tel); tel.href = 'tel:' + t.tel; info.append(`${t.usluga} · `, tel); }
       if (t.napomena) info.append(el('br'), 'Napomena: ' + t.napomena);
-      if (t.nijeDosao) info.append(el('span', 'znacka-nije', t.podmireno ? 'Nije došao · plaćeno' : 'Nije došao · nije platio'));
+      if (t.nijeDosao) info.append(el('span', 'znacka-nije', `${t.otkazanKasno ? 'Kasno otkazao' : 'Nije došao'} · ${t.podmireno ? 'plaćeno' : 'nije platio ' + cijena(t.usluga) + ' €'}`));
+      else if (t.otkazanKasno) info.append(el('span', 'prazno', 'Kasno otkazao · oprošteno'));
       if (!uPovijesti && t.uid) { info.classList.add('klik'); info.title = 'Prikaži sve termine klijenta'; info.onclick = e => { if (!e.target.closest('a')) povijest(t); }; }
       k.append(info);
 
       const gumbi = el('div', 'gumbi-termin');
-      const gumb = (tekst, fn, sivo) => { const b = el('button', 'btn-otkazi' + (sivo ? ' sivo' : ''), tekst); b.onclick = fn; gumbi.append(b); };
-      const oznaci = async (polja, pitanje) => { if (!pitanje || confirm(pitanje)) { await Store.oznaci(t.id, polja); nakon(); } };
-      if (t.datum + 'T' + t.vrijeme >= sad()) {
-        if (!uPovijesti) gumb('Otkaži termin', async () => { if (confirm(`Otkazati termin: ${t.ime}, ${t.vrijeme}?`)) { await Store.remove(t); nakon(); } });
+      const gumb = (tekst, fn, klasa = '') => { const b = el('button', 'btn-otkazi ' + klasa, tekst); b.onclick = () => fn(b); gumbi.append(b); };
+      // Spremanje oznake: gumbi se zaključaju dok traje, a greška se uvijek prikaže
+      const spremi = async (b, posao, pitanje) => {
+        if (pitanje && !confirm(pitanje)) return;
+        gumbi.querySelectorAll('button').forEach(x => { x.disabled = true; });
+        b.textContent = 'Spremam…';
+        try { await posao(); if (t.uid) delete povijesti[t.uid]; nakon(); }
+        catch (e) {
+          alert('Spremanje nije uspjelo.\n\nNajčešći razlog: u Firebaseu nisu zalijepljena nova pravila (Firestore Database → Rules).\n\nGreška: ' + (e.code || e.message));
+          nakon();
+        }
+      };
+      const oznaci = polja => () => Store.oznaci(t.id, polja);
+      if (t.otkazanKasno) {
+        if (t.nijeDosao && !t.podmireno) {
+          gumb('Platio', b => spremi(b, oznaci({ podmireno: true }), `${t.ime} je platio kasno otkazani termin (${cijena(t.usluga)} €)?`));
+          gumb('Oprosti', b => spremi(b, oznaci({ nijeDosao: false, podmireno: false }), `Oprostiti ${t.ime} kasni otkaz?`), 'sivo');
+        }
+      } else if (!prosao(t)) {
+        if (!uPovijesti) gumb('Otkaži termin', b => spremi(b, () => Store.remove(t), `Otkazati termin: ${t.ime}, ${t.vrijeme}?`));
       } else if (!t.nijeDosao) {
-        gumb('Nije došao', () => oznaci({ nijeDosao: true, podmireno: false }, `Označiti da ${t.ime} nije došao (${t.vrijeme})? Idući put plaća i ovaj termin.`), true);
+        gumb('Nije došao', b => spremi(b, oznaci({ nijeDosao: true, podmireno: false }), `Označiti da ${t.ime} nije došao (${kratkiDan(t.datum)} u ${t.vrijeme})?\n\nKod sljedećeg dolaska plaća i ovaj termin (${cijena(t.usluga)} €).`), 'opasno');
       } else {
-        if (!t.podmireno) gumb('Platio', () => oznaci({ podmireno: true }, `${t.ime} je platio propušteni termin?`));
-        gumb('Ipak je došao', () => oznaci({ nijeDosao: false, podmireno: false }), true);
+        if (!t.podmireno) gumb('Platio', b => spremi(b, oznaci({ podmireno: true }), `${t.ime} je platio propušteni termin (${cijena(t.usluga)} €)?`));
+        gumb('Ipak je došao', b => spremi(b, oznaci({ nijeDosao: false, podmireno: false })), 'sivo');
       }
       if (gumbi.children.length) k.append(gumbi);
       return k;
     }
 
     // Povijest klijenta: svi njegovi termini, najnoviji prvi
-    async function povijest(t) {
+    async function povijest(t, svjeze = false) {
       $('pIme').textContent = t.ime;
       $('pTel').textContent = t.tel; $('pTel').href = 'tel:' + t.tel;
-      $('pSazetak').textContent = 'Učitavam…';
+      $('pSazetak').innerHTML = '';
+      $('pSazetak').append(el('span', 'prazno', 'Učitavam…'));
       $('pLista').innerHTML = '';
       if (!$('povijest').open) $('povijest').showModal();
-      let svi;
-      try { svi = (await Store.mine(t.uid)).sort((a, b) => (b.datum + b.vrijeme).localeCompare(a.datum + a.vrijeme)); }
-      catch { $('pSazetak').textContent = 'Ne mogu učitati povijest.'; return; }
-      const proslih = svi.filter(x => x.datum + 'T' + x.vrijeme < sad());
-      const nije = svi.filter(x => x.nijeDosao).length;
-      $('pSazetak').textContent = `Ukupno ${svi.length} · prošlih ${proslih.length - nije} · nije došao ${nije} · budućih ${svi.length - proslih.length}`;
-      svi.forEach(x => $('pLista').append(kartica(x, () => { povijest(t); ucitajMjesec(kal.mjesec()); }, true)));
+      const p = await povijestKlijenta(t.uid, svjeze);
+      $('pSazetak').innerHTML = '';
+      if (!p) { $('pSazetak').append(el('span', 'prazno', 'Ne mogu učitati povijest.')); return; }
+      const s = statistika(p);
+      const cip = (tekst, klasa = '') => $('pSazetak').append(el('span', 'cip ' + klasa, tekst));
+      cip(`Došao ${s.dosao}`);
+      cip(`Nije došao ${s.nije}`, s.nije ? 'losa' : '');
+      if (s.kasno) cip(`Kasno otkazao ${s.kasno}`, 'losa');
+      cip(`Budućih ${s.buducih}`);
+      if (s.dug) cip(`Duguje ${s.dug} €`, 'losa');
+      p.slice().sort((a, b) => (b.datum + b.vrijeme).localeCompare(a.datum + a.vrijeme))
+        .forEach(x => $('pLista').append(kartica(x, () => { povijest(t, true); ucitajMjesec(kal.mjesec()); }, true)));
     }
     $('pZatvori').onclick = () => $('povijest').close();
     $('povijest').addEventListener('click', e => { if (e.target === $('povijest')) $('povijest').close(); });
