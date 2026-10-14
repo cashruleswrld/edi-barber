@@ -48,6 +48,16 @@ export const Store = {
     const s = await getDocs(query(collection(db, 'termini'), where('uid', '==', uid), where('nijeDosao', '==', true)));
     return lista(s).filter(t => !t.podmireno);
   },
+  // Otkaz manje od 8 sati prije termina: sat se oslobađa, a termin ostaje zapisan kao dug (termini/{id}_k)
+  async otkaziKasno(t) {
+    const { id, ...podaci } = t;
+    const b = writeBatch(db);
+    b.delete(doc(db, 'slots', id));
+    b.delete(doc(db, 'termini', id));
+    b.delete(doc(db, 'dnevno', dnevnoId(t.uid, t.datum)));
+    b.set(doc(db, 'termini', id + '_k'), { ...podaci, otkazanKasno: true, nijeDosao: true, podmireno: false });
+    await b.commit();
+  },
   // Frizer: oznaka "nije došao" / "platio"
   oznaci: (id, polja) => updateDoc(doc(db, 'termini', id), polja),
   async remove(t) {
@@ -60,6 +70,10 @@ export const Store = {
 };
 
 // Cijena iz spremljenog naziva usluge, npr. "Fade šišanje (20 €)" -> 20
+// Koliko je sati do termina (negativno ako je prošao)
+export const satiDo = t => (new Date(`${t.datum}T${t.vrijeme}`) - new Date()) / 36e5;
+export const ROK_OTKAZA = 8; // sati
+
 export const cijena = usluga => +((String(usluga || '').match(/\((\d+)\s*€\)/) || [])[1] || 0);
 
 // Provjera broja mobitela: hrvatski mobitel (091 234 5678, +385 91 234 5678) ili inozemni (+43 ...)
@@ -98,7 +112,10 @@ export const Auth = {
     const u = auth.currentUser;
     await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, lozinka));
     const moji = await Store.mine(u.uid);
-    if (moji.some(t => t.nijeDosao && !t.podmireno)) { const e = new Error('dug'); e.code = 'dug'; throw e; }
+    const greska = code => { const e = new Error(code); e.code = code; throw e; };
+    if (moji.some(t => t.nijeDosao && !t.podmireno)) greska('dug');
+    // Termini od prije 2 dana do 8 sati unaprijed ne mogu se obrisati (frizer još može označiti "nije došao")
+    if (moji.some(t => !t.otkazanKasno && satiDo(t) > -50 && satiDo(t) <= ROK_OTKAZA)) greska('blizu');
     for (const t of moji) await Store.remove(t);
     await deleteDoc(doc(db, 'korisnici', u.uid));
     await deleteUser(u);

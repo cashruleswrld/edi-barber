@@ -275,3 +275,10 @@ footer {
 .prozor .prazno { margin-bottom: 14px; }
 .upozorenje { background: var(--field); border-left: 4px solid var(--greska); border-radius: 4px; padding: 12px 14px; color: var(--greska); font-weight: 500; }
 .pravilo { color: var(--muted); font-size: .9rem; font-weight: 400; }
+.kasno-upozorenje { display: block; margin-top: 8px; color: var(--crvena); font-weight: 700; }
+
+/* Frizer: brojke u povijesti klijenta */
+.cipovi { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
+.cip { border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-size: .9rem; color: var(--ink); }
+.cip.losa { border-color: var(--greska); color: var(--greska); }
+.termin.propusten { border-left-color: var(--greska); }
