@@ -260,3 +260,18 @@ footer {
 .kontakt p { color: var(--muted); }
 .kontakt a { display: inline-flex; align-items: center; gap: 12px; color: var(--ink); font-weight: 500; font-size: 1.1rem; text-decoration: none; justify-self: start; }
 .kontakt a:hover { text-decoration: underline; }
+
+/* Frizer: povijest klijenta, oznake "nije došao" i duga */
+.termin .info.klik { cursor: pointer; }
+.termin .info.klik strong { text-decoration: underline; text-decoration-color: #6b6768; text-underline-offset: 3px; }
+.gumbi-termin { display: flex; flex-wrap: wrap; gap: 8px; }
+.znacka-nije, .dug { display: block; margin-top: 6px; color: var(--greska); font-weight: 500; }
+.dug::before { content: "⚠ "; }
+.prozor { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); margin: auto; padding: 20px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; }
+.prozor::backdrop { background: rgba(0, 0, 0, .6); }
+.prozor-glava { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+.prozor-glava h2 { margin: 0 0 4px; font-size: 1.6rem; letter-spacing: 0; text-transform: none; }
+.prozor-glava a { color: var(--muted); }
+.prozor .prazno { margin-bottom: 14px; }
+.upozorenje { background: var(--field); border-left: 4px solid var(--greska); border-radius: 4px; padding: 12px 14px; color: var(--greska); font-weight: 500; }
+.pravilo { color: var(--muted); font-size: .9rem; font-weight: 400; }

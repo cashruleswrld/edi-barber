@@ -1,0 +1,65 @@
+rules_version = '2';
+// Pravila za Firestore bazu. Kopiraju se u Firebase konzolu: Firestore Database -> Rules -> Publish.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function prijavljen() { return request.auth != null; }
+    function frizer() { return prijavljen() && request.auth.token.email == 'bornapavicic85@gmail.com'; }
+    function dobarTel(t) { return t is string && t.matches('^(09[1-9][0-9]{6,7}|[+][1-9][0-9]{7,14})$'); }
+    function dobroIme(i) { return i is string && i.size() >= 2 && i.size() <= 50; }
+    function put(kolekcija, id) { return /databases/$(database)/documents/$(kolekcija)/$(id); }
+
+    // Zauzeti sati (bez osobnih podataka) – nastaju samo zajedno s terminom
+    match /slots/{id} {
+      allow read: if prijavljen();
+      allow create: if prijavljen()
+        && request.resource.data.keys().hasOnly(['datum', 'vrijeme'])
+        && id == request.resource.data.datum + '_' + request.resource.data.vrijeme
+        && existsAfter(put('termini', id));
+      allow delete: if frizer()
+        || (prijavljen() && get(put('termini', id)).data.uid == request.auth.uid);
+    }
+
+    // Oznaka {uid}_{datum}: jedna osoba može imati najviše jedan termin u danu
+    match /dnevno/{id} {
+      allow create: if prijavljen()
+        && request.resource.data.keys().hasOnly(['uid', 'datum'])
+        && request.resource.data.uid == request.auth.uid
+        && id == request.auth.uid + '_' + request.resource.data.datum;
+      allow delete: if frizer() || (prijavljen() && id.matches('^' + request.auth.uid + '_.*'));
+    }
+
+    // Termini: vidi ih frizer i vlasnik; frizer smije samo označiti "nije došao" / "platio"
+    match /termini/{id} {
+      allow read: if frizer() || (prijavljen() && resource.data.uid == request.auth.uid);
+      allow create: if prijavljen()
+        && request.resource.data.keys().hasOnly(['ime', 'tel', 'usluga', 'datum', 'vrijeme', 'napomena', 'created', 'uid'])
+        && request.resource.data.uid == request.auth.uid
+        && id == request.resource.data.datum + '_' + request.resource.data.vrijeme
+        && request.resource.data.datum.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && request.resource.data.vrijeme.matches('^[0-9]{2}:[0-9]{2}$')
+        && dobroIme(request.resource.data.ime)
+        && dobarTel(request.resource.data.tel)
+        && request.resource.data.usluga is string && request.resource.data.usluga.size() <= 60
+        && request.resource.data.napomena is string && request.resource.data.napomena.size() <= 500
+        && request.resource.data.created == request.time
+        && existsAfter(put('slots', id))
+        && existsAfter(put('dnevno', request.auth.uid + '_' + request.resource.data.datum));
+      allow update: if frizer()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nijeDosao', 'podmireno']);
+      // Klijent ne može obrisati propušteni termin koji još nije platio
+      allow delete: if frizer()
+        || (prijavljen() && resource.data.uid == request.auth.uid
+            && !(resource.data.get('nijeDosao', false) == true && resource.data.get('podmireno', false) != true));
+    }
+
+    // Osobni podaci klijenta – samo vlasnik
+    match /korisnici/{uid} {
+      allow read, delete: if prijavljen() && request.auth.uid == uid;
+      allow create, update: if prijavljen() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['ime', 'tel'])
+        && dobroIme(request.resource.data.ime)
+        && dobarTel(request.resource.data.tel);
+    }
+  }
+}
