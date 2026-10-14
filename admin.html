@@ -113,7 +113,7 @@
       $('danBroj').textContent = termini.length ? `${termini.length} ${termini.length === 1 ? 'termin' : 'termina'}` : '';
       if (!termini.length) { lista.append(el('p', 'prazno', 'Nema termina za taj dan.')); return; }
       termini.forEach(t => lista.append(kartica(t, () => ucitajMjesec(d.slice(0, 7)))));
-      // Uz svakog klijenta: koliko puta nije došao / kasno otkazao i koliko duguje
+      // Uz svakog klijenta: koliko puta nije došao / kasno otkazao (dug se vidi samo u profilu)
       for (const uid of new Set(termini.map(t => t.uid).filter(Boolean))) {
         const p = await povijestKlijenta(uid);
         if (!p || kal.odabrani() !== d) continue;
@@ -121,7 +121,6 @@
         const dijelovi = [];
         if (s.nije) dijelovi.push(`nije došao ${s.nije}×`);
         if (s.kasno) dijelovi.push(`kasno otkazao ${s.kasno}×`);
-        if (s.dug) dijelovi.push(`duguje ${s.dug} €`);
         if (!dijelovi.length) continue;
         lista.querySelectorAll(`[data-uid="${uid}"] .info`).forEach(i => i.append(el('span', 'dug', dijelovi.join(' · '))));
       }

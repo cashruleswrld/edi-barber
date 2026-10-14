@@ -19,7 +19,7 @@ PWA za naručivanje kod frizera "Edi Barbershop" (Gajeva ul. 29A, Zagreb, tel 09
 - `jezik.js` – prijevodi hr/en, `data-i18n`, `t()`. Svaki novi tekst dodaj u **oba** jezika.
 - `style.css` – tamnosiva tema (pozadina #2b2a2b, kartice #363435), naglasak bijeli (`--naglasak`), greške jantarne (`--greska`), crvena samo za brisanje računa i kasni otkaz (`--crvena`).
 - `firestore.rules` – pravila baze. **Ne primjenjuju se sama**: vlasnik ih ručno lijepi u Firebase konzolu.
-- `sw.js` – service worker. **Pri svakoj izmjeni povećaj `CACHE`** (trenutno `edi-v18`); novi JS fajl dodaj u `FILES`.
+- `sw.js` – service worker. **Pri svakoj izmjeni povećaj `CACHE`** (trenutno `edi-v19`); novi JS fajl dodaj u `FILES`.
 - `racun.html` – samo preusmjerenje. `index_noviiiii_.html` – stari probni fajl, ne koristi se.
 
 ## Baza (Firestore, Spark besplatni plan; Auth samo email+lozinka)
