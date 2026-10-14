@@ -1,6 +1,6 @@
 // Zajednički kod: Firebase (baza + prijava) i registracija aplikacije (PWA)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, doc, getDoc, setDoc, deleteDoc, writeBatch, getDocs, query, where, serverTimestamp }
+import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, writeBatch, getDocs, query, where, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, reauthenticateWithCredential, EmailAuthProvider, deleteUser, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -16,37 +16,51 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// "slots" = javno vidljivi zauzeti sati (bez imena), "termini" = pravi podaci (vidi ih samo frizer)
+// "slots" = javno vidljivi zauzeti sati (bez imena), "termini" = pravi podaci (vidi ih samo frizer i vlasnik),
+// "dnevno" = oznaka {uid}_{datum} koja sprječava da jedna osoba ima više od jednog termina u danu
+const dnevnoId = (uid, datum) => `${uid}_${datum}`;
+const lista = s => s.docs.map(d => ({ id: d.id, ...d.data() }));
 export const Store = {
   async takenOn(datum) {
     const s = await getDocs(query(collection(db, 'slots'), where('datum', '==', datum)));
     return new Set(s.docs.map(d => d.data().vrijeme));
   },
   async add(t) {
+    if (!auth.currentUser) throw new Error('Nisi prijavljen');
+    const uid = auth.currentUser.uid; // termin je uvijek vezan uz račun
     const id = `${t.datum}_${t.vrijeme}`;
     const b = writeBatch(db);
     b.set(doc(db, 'slots', id), { datum: t.datum, vrijeme: t.vrijeme });
-    const podaci = { ...t, created: serverTimestamp() };
-    if (!auth.currentUser) throw new Error('Nisi prijavljen');
-    podaci.uid = auth.currentUser.uid; // termin je uvijek vezan uz račun
-    b.set(doc(db, 'termini', id), podaci);
-    await b.commit(); // ako je termin već zauzet, cijela operacija ne uspije
+    b.set(doc(db, 'dnevno', dnevnoId(uid, t.datum)), { uid, datum: t.datum });
+    b.set(doc(db, 'termini', id), { ...t, uid, created: serverTimestamp() });
+    await b.commit(); // ako je sat zauzet ili osoba taj dan već ima termin, cijela operacija ne uspije
   },
-  async all() {
-    const s = await getDocs(collection(db, 'termini'));
-    return s.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Frizer: termini od..do (npr. jedan mjesec), da se ne učitava cijela povijest odjednom
+  async razdoblje(od, doDatuma) {
+    return lista(await getDocs(query(collection(db, 'termini'), where('datum', '>=', od), where('datum', '<=', doDatuma))));
   },
+  // Svi termini jedne osobe (klijent svoje, frizer bilo čije)
   async mine(uid) {
-    const s = await getDocs(query(collection(db, 'termini'), where('uid', '==', uid)));
-    return s.docs.map(d => ({ id: d.id, ...d.data() }));
+    return lista(await getDocs(query(collection(db, 'termini'), where('uid', '==', uid))));
   },
-  async remove(id) {
+  // Propušteni termini koji još nisu plaćeni
+  async dugovi(uid) {
+    const s = await getDocs(query(collection(db, 'termini'), where('uid', '==', uid), where('nijeDosao', '==', true)));
+    return lista(s).filter(t => !t.podmireno);
+  },
+  // Frizer: oznaka "nije došao" / "platio"
+  oznaci: (id, polja) => updateDoc(doc(db, 'termini', id), polja),
+  async remove(t) {
     const b = writeBatch(db);
-    b.delete(doc(db, 'slots', id));
-    b.delete(doc(db, 'termini', id));
+    b.delete(doc(db, 'slots', t.id));
+    b.delete(doc(db, 'termini', t.id));
+    if (t.uid) b.delete(doc(db, 'dnevno', dnevnoId(t.uid, t.datum)));
     await b.commit();
   }
 };
+
+// Cijena iz spremljenog naziva usluge, npr. "Fade šišanje (20 €)" -> 20
+export const cijena = usluga => +((String(usluga || '').match(/\((\d+)\s*€\)/) || [])[1] || 0);
 
 // Provjera broja mobitela: hrvatski mobitel (091 234 5678, +385 91 234 5678) ili inozemni (+43 ...)
 // Vraća očišćen broj ili null ako nije pravi broj
@@ -83,7 +97,9 @@ export const Auth = {
   obrisiRacun: async (lozinka) => {
     const u = auth.currentUser;
     await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, lozinka));
-    for (const t of await Store.mine(u.uid)) await Store.remove(t.id);
+    const moji = await Store.mine(u.uid);
+    if (moji.some(t => t.nijeDosao && !t.podmireno)) { const e = new Error('dug'); e.code = 'dug'; throw e; }
+    for (const t of moji) await Store.remove(t);
     await deleteDoc(doc(db, 'korisnici', u.uid));
     await deleteUser(u);
   },

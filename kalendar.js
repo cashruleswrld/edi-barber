@@ -1,6 +1,7 @@
 // Kalendar po mjesecima: klijent bira dan za termin, frizer gleda termine po danima.
 // Opcije: loc() -> 'hr-HR' / 'en-GB', odabir(datum), onemoguci(datum) -> true/false,
-// oznaka(datum) -> tekst značke (npr. broj termina), od / do -> 'YYYY-MM-DD' granice za strelice
+// oznaka(datum) -> tekst značke (npr. broj termina), od / do -> 'YYYY-MM-DD' granice za strelice,
+// naMjesec('YYYY-MM') -> poziva se kad se prikaže drugi mjesec
 export const ymd = d =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
@@ -8,6 +9,8 @@ export function kalendar(el, o) {
   let mj = new Date(); mj.setDate(1);
   let odabrani = '';
   const mjesec = d => d.slice(0, 7);
+  const prikazani = () => ymd(mj).slice(0, 7);
+  const javi = staro => { if (o.naMjesec && prikazani() !== staro) o.naMjesec(prikazani()); };
 
   function strelica(znak, smjer, oznaka) {
     const b = document.createElement('button');
@@ -15,7 +18,7 @@ export function kalendar(el, o) {
     b.setAttribute('aria-label', oznaka);
     const cilj = ymd(new Date(mj.getFullYear(), mj.getMonth() + smjer, 1));
     b.disabled = (smjer < 0 && o.od && mjesec(cilj) < mjesec(o.od)) || (smjer > 0 && o.do && mjesec(cilj) > mjesec(o.do));
-    b.onclick = () => { mj.setMonth(mj.getMonth() + smjer); crtaj(); };
+    b.onclick = () => { const staro = prikazani(); mj.setMonth(mj.getMonth() + smjer); crtaj(); javi(staro); };
     return b;
   }
 
@@ -64,10 +67,12 @@ export function kalendar(el, o) {
   return {
     crtaj,
     odabrani: () => odabrani,
+    mjesec: prikazani,
     postavi(datum) { // odabere dan (ili '' za ništa) i otvori njegov mjesec
+      const staro = prikazani();
       odabrani = datum;
       if (datum) { const [g, m] = datum.split('-'); mj = new Date(+g, +m - 1, 1); }
-      crtaj();
+      crtaj(); javi(staro);
     }
   };
 }

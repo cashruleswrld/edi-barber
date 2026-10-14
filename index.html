@@ -172,6 +172,7 @@
     <div class="narudzba">
       <h2 data-i18n="narudzba_h">Naruči termin</h2>
       <form id="forma">
+        <p class="upozorenje" id="dugInfo" hidden></p>
         <label><span data-i18n="lbl_ime">Ime</span>
           <input type="text" name="ime" required autocomplete="given-name">
         </label>
@@ -199,6 +200,7 @@
           <textarea name="napomena" rows="3"></textarea>
         </label>
         <p class="sazetak" id="sazetak" hidden></p>
+        <p class="pravilo" data-i18n="pravilo_dolazak">Ako ne dođeš na termin, a nisi ga otkazao, kod sljedećeg dolaska plaćaš i propušteni termin.</p>
         <button class="btn" type="submit" data-i18n="potvrdi">Potvrdi narudžbu</button>
         <p id="poruka" role="status"></p>
       </form>
@@ -277,7 +279,7 @@
   </nav>
 
   <script type="module">
-    import { Store, Auth, Profil, provjeriTel } from './app.js';
+    import { Store, Auth, Profil, provjeriTel, cijena } from './app.js';
     import { t, jezik } from './jezik.js';
     import { kalendar, ymd } from './kalendar.js';
     const $ = id => document.getElementById(id);
@@ -288,6 +290,7 @@
       prijava: 'pocetna', registracija: 'pocetna', rezervacija: 'pocetna',
       profil: 'postavke', racun: 'postavke', oaplikaciji: 'postavke', obrisi: 'postavke' };
     const ZASTICENI = ['rezervacija', 'profil', 'racun', 'obrisi'];
+    const MAX_BUDUCIH = 2; // najviše budućih termina odjednom po osobi (i najviše 1 u danu)
     let korisnik = null, profil = null, spreman = false, tab = 'buduci';
 
     const poruci = (el, k, v, ok = false) => { el.textContent = k ? t(k, v) : ''; el.style.color = ok ? '#6fd39a' : ''; };
@@ -316,7 +319,7 @@
       document.querySelectorAll('.tab').forEach(b => b.classList.toggle('aktivno', b.dataset.go === POGLEDI[v]));
       window.scrollTo(0, 0);
       if (v === 'termini') prikaziTermine();
-      if (v === 'rezervacija') osvjeziSate();
+      if (v === 'rezervacija') { osvjeziSate(); provjeriDug(); }
       if (v === 'racun' && korisnik) $('racunEmail').value = korisnik.email || '';
     }
     window.addEventListener('hashchange', render);
@@ -403,7 +406,7 @@
         location.hash = '#pocetna';
         toast('racun_obrisan');
       } catch (er) {
-        poruci(por, (er.code === 'auth/invalid-credential' || er.code === 'auth/wrong-password') ? 'kriva_lozinka' : 'brisanje_greska');
+        poruci(por, er.code === 'dug' ? 'brisanje_dug' : (er.code === 'auth/invalid-credential' || er.code === 'auth/wrong-password') ? 'kriva_lozinka' : 'brisanje_greska');
       }
     });
 
@@ -434,13 +437,18 @@
         const naslov = document.createElement('strong');
         naslov.textContent = t('u_vrijeme', { d: lijepDan(x.datum), v: x.vrijeme });
         tekst.append(naslov, document.createElement('br'), nazivUsluge(x.usluga));
+        if (x.nijeDosao) {
+          const n = document.createElement('span'); n.className = 'znacka-nije';
+          n.textContent = t(x.podmireno ? 'nisi_dosao_placeno' : 'nisi_dosao');
+          tekst.append(n);
+        }
         kartica.append(tekst);
         if (buduci) {
           const gumb = document.createElement('button');
           gumb.className = 'btn-otkazi';
           gumb.textContent = t('otkazi');
           gumb.onclick = async () => {
-            if (confirm(t('potvrdi_otkaz', { d: x.datum, v: x.vrijeme }))) { await Store.remove(x.id); prikaziTermine(); }
+            if (confirm(t('potvrdi_otkaz', { d: x.datum, v: x.vrijeme }))) { await Store.remove(x); prikaziTermine(); }
           };
           kartica.append(gumb);
         }
@@ -472,9 +480,24 @@
     function sazetak() {
       const s = $('sazetak'), f = forma;
       s.hidden = !(f.usluga.value && f.datum.value && f.vrijeme.value);
-      if (!s.hidden) s.textContent = `${t('u_vrijeme', { d: lijepDan(f.datum.value), v: f.vrijeme.value })} · ${nazivUsluge(f.usluga.value)}`;
+      if (s.hidden) return;
+      s.textContent = `${t('u_vrijeme', { d: lijepDan(f.datum.value), v: f.vrijeme.value })} · ${nazivUsluge(f.usluga.value)}`;
+      const dugIznos = dugovi.reduce((z, x) => z + cijena(x.usluga), 0);
+      if (dugIznos) s.textContent += ' · ' + t('ukupno', { x: dugIznos + cijena(f.usluga.value) });
     }
     forma.usluga.addEventListener('change', sazetak);
+
+    // Propušteni (neplaćeni) termini: klijent vidi upozorenje i ukupnu cijenu
+    let dugovi = [];
+    async function provjeriDug() {
+      try { dugovi = korisnik ? await Store.dugovi(korisnik.uid) : []; } catch { dugovi = []; }
+      const el = $('dugInfo');
+      el.hidden = !dugovi.length;
+      if (dugovi.length) el.textContent = t('dug_info', {
+        d: dugovi.map(x => t('u_vrijeme', { d: lijepDan(x.datum), v: x.vrijeme })).join(', '),
+        x: dugovi.reduce((z, x) => z + cijena(x.usluga), 0) });
+      sazetak();
+    }
 
     function satiPoruka(k) {
       satiEl.innerHTML = '';
@@ -525,6 +548,13 @@
       if (!forma.vrijeme.value) { msg('m_odaberi_sat', {}, false); return; }
       const gumb = forma.querySelector('button[type=submit]');
       gumb.disabled = true;
+      // Zaštita od lažnih rezervacija: 1 termin u danu i najviše MAX_BUDUCIH unaprijed
+      try {
+        const sadSada = new Date(), granica = sadSada.toLocaleDateString('sv-SE') + 'T' + sadSada.toTimeString().slice(0, 5);
+        const buduci = (await Store.mine(korisnik.uid)).filter(x => x.datum + 'T' + x.vrijeme >= granica);
+        const greska = buduci.some(x => x.datum === forma.datum.value) ? 'm_jedan_dnevno' : buduci.length >= MAX_BUDUCIH ? 'm_max_buducih' : '';
+        if (greska) { msg(greska, { n: MAX_BUDUCIH }, false); gumb.disabled = false; return; }
+      } catch {}
       const rez = { ime: forma.ime.value.trim(), tel, usluga: forma.usluga.value,
         datum: forma.datum.value, vrijeme: forma.vrijeme.value, napomena: forma.napomena.value.trim() };
       try {
