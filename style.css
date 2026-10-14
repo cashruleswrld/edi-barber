@@ -265,8 +265,7 @@ footer {
 .termin .info.klik { cursor: pointer; }
 .termin .info.klik strong { text-decoration: underline; text-decoration-color: #6b6768; text-underline-offset: 3px; }
 .gumbi-termin { display: flex; flex-wrap: wrap; gap: 8px; }
-.znacka-nije, .dug { display: block; margin-top: 6px; color: var(--greska); font-weight: 500; }
-.dug::before { content: "⚠ "; }
+.znacka-nije { display: block; margin-top: 6px; color: var(--greska); font-weight: 500; }
 .prozor { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); margin: auto; padding: 20px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; }
 .prozor::backdrop { background: rgba(0, 0, 0, .6); }
 .prozor-glava { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }

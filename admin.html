@@ -103,7 +103,7 @@
       if (kal.odabrani().startsWith(ym)) prikaziDan(kal.odabrani());
     }
 
-    async function prikaziDan(d) {
+    function prikaziDan(d) {
       lista.innerHTML = '';
       $('danNaslov').textContent = lijepDan(d);
       $('danBroj').textContent = '';
@@ -113,17 +113,6 @@
       $('danBroj').textContent = termini.length ? `${termini.length} ${termini.length === 1 ? 'termin' : 'termina'}` : '';
       if (!termini.length) { lista.append(el('p', 'prazno', 'Nema termina za taj dan.')); return; }
       termini.forEach(t => lista.append(kartica(t, () => ucitajMjesec(d.slice(0, 7)))));
-      // Uz svakog klijenta: koliko puta nije došao / kasno otkazao (dug se vidi samo u profilu)
-      for (const uid of new Set(termini.map(t => t.uid).filter(Boolean))) {
-        const p = await povijestKlijenta(uid);
-        if (!p || kal.odabrani() !== d) continue;
-        const s = statistika(p);
-        const dijelovi = [];
-        if (s.nije) dijelovi.push(`nije došao ${s.nije}×`);
-        if (s.kasno) dijelovi.push(`kasno otkazao ${s.kasno}×`);
-        if (!dijelovi.length) continue;
-        lista.querySelectorAll(`[data-uid="${uid}"] .info`).forEach(i => i.append(el('span', 'dug', dijelovi.join(' · '))));
-      }
     }
 
     // Povijest klijenata (pamti se dok je aplikacija otvorena, da se ne čita stalno iz baze)
